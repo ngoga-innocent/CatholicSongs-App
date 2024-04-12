@@ -20,6 +20,7 @@ import { FetchMusician } from "../../../redux/Features/MusicianSlice";
 import { FetchCopies } from "../../../redux/Features/CopuesSlice";
 import { Entypo } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import * as Animatable from "react-native-animatable";
 const HomePage = () => {
   const dispatch = useDispatch();
   const scrollViewRef = useRef(null);
@@ -67,6 +68,7 @@ const HomePage = () => {
   // constants Setting Up
   const height = Dimensions.get("screen").height;
   const width = Dimensions.get("screen").width;
+
   //Use Selecto Content
 
   return (
@@ -209,7 +211,11 @@ const HomePage = () => {
         </TouchableOpacity>
       </View>
       {musicianLoading && <ActivityIndicator size={30} color="purple" />}
-      <ScrollView horizontal pagingEnabled className="mx-1 py-2 gap-x-1">
+      <ScrollView
+        horizontal
+        alwaysBounceHorizontal
+        className="flex-1 mx-2 py-2 gap-x-1"
+      >
         {musicians.length > 0 ? (
           musicians.slice(0, 15).map((item, index) => {
             return (

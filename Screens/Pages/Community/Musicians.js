@@ -15,6 +15,7 @@ import { Avatar } from "react-native-elements";
 import { Ionicons } from "@expo/vector-icons";
 import { Entypo } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import * as Animatable from "react-native-animatable";
 const Musicians = () => {
   const dispatch = useDispatch();
   const [filter_key, setFilterKey] = useState("");
@@ -99,6 +100,7 @@ const Musicians = () => {
             <MaterialIcons name="filter-alt" size={24} color="white" />
           </TouchableOpacity>
         </View>
+
         <View className="sticky top-2 flex flex-row justify-end gap-x-2 mx-3 items-center">
           <Text className="text-white font-bold">filter by:</Text>
           {skills.map((item, index) => {
@@ -119,7 +121,18 @@ const Musicians = () => {
             );
           })}
         </View>
+        <Animatable.View
+          className="self-end  z-20 border border-white py-2 px-2 rounded-md"
+          animation="pulse"
+          iterationCount="infinite"
+          duration={3000}
+        >
+          <TouchableOpacity>
+            <Text className="text-white">Join Community</Text>
+          </TouchableOpacity>
+        </Animatable.View>
       </View>
+
       <View className="w-full flex flex-row flex-wrap  gap-2 mt-3">
         {filteredMusicians.length > 0 &&
           filteredMusicians.map((item, index) => {

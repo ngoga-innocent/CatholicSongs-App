@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Dimensions,
+  Linking,
 } from "react-native";
 import { useSelector } from "react-redux";
 import { Avatar } from "react-native-elements";
@@ -112,28 +113,37 @@ const MusicianProfile = ({ route }) => {
         )}
       </View>
       <View className="flex flex-row items-center gap-x-2 my-2">
-        <TouchableOpacity className="bg-blue-600 px-4 py-1 rounded-md">
+        <TouchableOpacity
+          onPress={() =>
+            Linking.openURL(`tel:${selectedMusician?.phone_number}`)
+          }
+          className="bg-blue-600 px-4 py-1 rounded-md"
+        >
           <Ionicons name="call" size={24} color="white" />
         </TouchableOpacity>
-        <TouchableOpacity className="px-3 py-1 rounded-md bg-green-600">
+        <TouchableOpacity
+          onPress={() =>
+            Linking.openURL(
+              `whatsapp://send?phone=${
+                selectedMusician?.phone_number?.length > 10
+                  ? selectedMusician?.phone_number
+                  : `250` + selectedMusician?.phone_number
+              }`
+            )
+          }
+          className="px-3 py-1 rounded-md bg-green-600"
+        >
           <Ionicons name="logo-whatsapp" size={24} color="white" />
         </TouchableOpacity>
-        <TouchableOpacity className="px-3 py-1 rounded-md bg-blue-600">
+        <TouchableOpacity
+          onPress={() =>
+            Linking.openURL(`sms:${selectedMusician?.phone_number}`)
+          }
+          className="px-3 py-1 rounded-md bg-blue-600"
+        >
           <MaterialIcons name="sms" size={24} color="white" />
         </TouchableOpacity>
       </View>
-      {/* */}
-      {/* <View className="flex flex-row justify-evenly flex-end gap-x-3 mx-2  z-10">
-        <TouchableOpacity className="bg-blue-600 py-3 items-center flex-1 rounded-md">
-          <Text>Call</Text>
-        </TouchableOpacity>
-        <TouchableOpacity className="bg-blue-600 py-3 items-center flex-1 rounded-md">
-          <Text>Message</Text>
-        </TouchableOpacity>
-        <TouchableOpacity className="bg-blue-600 py-3 items-center flex-1 rounded-md">
-          <Text>Whatsap</Text>
-        </TouchableOpacity>
-      </View> */}
     </ScrollView>
   );
 };
