@@ -8,6 +8,7 @@ import {
   ScrollView,
   Dimensions,
   Linking,
+  Alert
 } from "react-native";
 import { useSelector } from "react-redux";
 import { Avatar } from "react-native-elements";
@@ -28,7 +29,7 @@ const MusicianProfile = ({ route }) => {
   return (
     <ScrollView
       scrollEnabled
-      className="flex-1 px-4"
+      className="flex-1 px-4 bg-black"
       contentContainerStyle={{
         flex: 1,
         paddingBottom: Dimensions.get("screen").height / 5.3,
@@ -51,7 +52,7 @@ const MusicianProfile = ({ route }) => {
       )}
 
       <View className="flex flex-row justify-between  items-center mt-2">
-        <Text className="font-bold text-lg max-w-[70%]">
+        <Text className="font-bold text-white text-lg max-w-[70%]">
           {selectedMusician?.user_data?.first_name +
             " " +
             selectedMusician?.user_data?.last_name +
@@ -60,7 +61,7 @@ const MusicianProfile = ({ route }) => {
         </Text>
         <View className="flex-end items-end max-w-[40%]  py-2 px-3 rounded-md">
           <View className="flex flex-row items-center">
-            <Text className="text-xs font-bold">Verified</Text>
+            <Text className="text-xs font-bold text-white">Verified</Text>
             {selectedMusician?.verified ? (
               <Ionicons name="checkmark-circle-sharp" size={24} color="green" />
             ) : (
@@ -69,7 +70,7 @@ const MusicianProfile = ({ route }) => {
           </View>
           <View className="flex flex-row items-center">
             <Entypo name="location-pin" size={24} color="orange" />
-            <Text>{selectedMusician?.location}</Text>
+            <Text className="text-white">{selectedMusician?.location}</Text>
           </View>
         </View>
       </View>
@@ -87,10 +88,10 @@ const MusicianProfile = ({ route }) => {
         /> */}
 
       <View>
-        <Text>Description</Text>
-        <Text>{selectedMusician?.description}</Text>
+        <Text className="font-bold text-xl mb-1 text-white">Description</Text>
+        <Text className="text-white">{selectedMusician?.description}</Text>
       </View>
-      <Text className="text-lg font-bold my-2 underline">Capabilities</Text>
+      <Text className="text-lg font-bold my-2 text-white underline">What he do  For You</Text>
       <View className="flex flex-row flex-wrap  gap-2">
         {selectedMusician?.skills_data?.map((item, index) => {
           return (
@@ -98,24 +99,33 @@ const MusicianProfile = ({ route }) => {
               key={index}
               className="bg-slate-300 py-3 px-3 rounded-md"
             >
-              <Text>{item.name}</Text>
+              <Text className="">{item.name}</Text>
             </TouchableOpacity>
           );
         })}
       </View>
       <View>
-        <Text className="text-lg font-bold my-2 underline">Contacts</Text>
+        <Text className="text-lg font-bold my-2 text-white underline">Contacts</Text>
         {selectedMusician?.phone_number && (
           <View className="flex flex-row gap-x-1">
-            <Text>Phone Number:</Text>
-            <Text className="font-bold">{selectedMusician?.phone_number}</Text>
+            <Text className="text-white">Phone Number:</Text>
+            <Text className="font-bold text-white">{selectedMusician?.phone_number}</Text>
           </View>
         )}
       </View>
       <View className="flex flex-row items-center gap-x-2 my-2">
         <TouchableOpacity
-          onPress={() =>
-            Linking.openURL(`tel:${selectedMusician?.phone_number}`)
+          onPress={() =>{
+            if(Linking.canOpenURL(`tel:${selectedMusician?.phone_number}`)){
+              Linking.openURL(`tel:${selectedMusician?.phone_number}`)
+              return
+            }
+           else{
+             Alert.alert("Unable to Open your Call application")
+            
+           } 
+          }
+            
           }
           className="bg-blue-600 px-4 py-1 rounded-md"
         >

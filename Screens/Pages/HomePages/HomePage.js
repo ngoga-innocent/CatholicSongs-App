@@ -1,323 +1,407 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
-  SafeAreaView,
   Text,
   ScrollView,
-  Image,
-  Dimensions,
   TouchableOpacity,
+  Modal,
+  TouchableWithoutFeedback,
+  TextInput,
   ActivityIndicator,
-  Linking,
+  RefreshControl
 } from "react-native";
-import { Avatar } from "react-native-elements";
-import { useDispatch, useSelector } from "react-redux";
-import { FetchEvent, FetchTrendings } from "../../../redux/Features/EventSlice";
-import { Ionicons } from "@expo/vector-icons";
-import YoutubePlayer from "react-native-youtube-iframe";
-import { Video } from "expo-av";
-import { FetchMusician } from "../../../redux/Features/MusicianSlice";
-import { FetchCopies } from "../../../redux/Features/CopuesSlice";
-import { Entypo } from "@expo/vector-icons";
+import Header from "../../Components/Header";
+import { useSelector, useDispatch } from "react-redux";
+import * as Network from "expo-network";
+import Toast from "react-native-toast-message";
+import {
+  SongCategory,
+  FetchCopiesType,
+  UploadSong
+} from "../../../redux/Features/CopuesSlice";
+import CircularProgress from "../../Components/CircleAnimation";
 import { useNavigation } from "@react-navigation/native";
 import * as Animatable from "react-native-animatable";
+import { COLORS, dimensions } from "../../Components/Global";
+import * as DocumentPicker from "expo-document-picker";
 const HomePage = () => {
   const dispatch = useDispatch();
-  const scrollViewRef = useRef(null);
   const navigation = useNavigation();
-  //State Declaration
-  const { events, trendings, eventLoading, tredingLoading } = useSelector(
-    (state) => state.Events
-  );
-  const { musicians, musicianLoading } = useSelector(
-    (state) => state.Musicians
-  );
-  const { User } = useSelector((state) => state.Account);
-  const { copies, copyLoading } = useSelector((state) => state.Copies);
-  const [currentEventIndex, setEventCurrentIndex] = useState(0);
-  const [choosenCopy, setChoosenCopy] = useState();
-  const [choosenCopyIndex, setChoosenCopyIndex] = useState();
-  //use Effect Section
+  //Select Categories
+  const { songCategories, copiesType,copyLoading } = useSelector((state) => state.Copies);
+  const [upload, setUpload] = useState(false);
+  const [showpart, setShowPart] = useState(false);
+  const [choosenPart, setChoosenPart] = useState("");
+  const [location, setLocation] = useState({ x: null, y: null });
+  const [showCategory, setShowCategory] = useState(false);
+  const [choosenCategory, setChoosenCategory] = useState("");
+  const [selectedPdf, setSelectedPdf] = useState(null);
+  const [song_name, setSongName] = useState("");
+  const [song_composer, setSongComposer] = useState("");
+  // console.log(songCategories)
+  //Dispatch
   useEffect(() => {
-    async function dispatchFunction() {
-      dispatch(FetchEvent());
-      dispatch(FetchTrendings());
-      dispatch(FetchMusician());
-      dispatch(FetchCopies());
-      //   console.log(trendigs);
+    checkNetwork();
+    FetchCategories();
+  }, []);
+  async function checkNetwork() {
+    const network = await Network.getNetworkStateAsync();
+    //  console.log(network)
+    return network.isConnected;
+  }
+  //Fetxhing song category
+  async function FetchCategories() {
+    if (!checkNetwork()) {
+      Toast.show({
+        text1: "No Active internet Connection",
+        text2: "Continueing in Offline mode",
+        type: "info",
+        position: "top",
+
+        autoHide: true
+      });
+      return;
     }
-    dispatchFunction();
-  }, [dispatch]);
+    const result = await dispatch(SongCategory());
+    // console.log(result)
+    if (SongCategory.fulfilled.match(result)) {
+      console.log(result.payload);
+      return;
+    }
+    if (SongCategory.rejected.match(result)) {
+      // console.log(result.payload)
+      Toast.show({
+        text1: "Failed to fetch Song Categories",
+        text2: "Please try again later",
+        type: "error",
+        position: "top",
 
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      if (scrollViewRef.current) {
-        const nextPage =
-          currentEventIndex == events.length - 1 ? 0 : currentEventIndex + 1;
-        scrollViewRef.current.scrollTo({
-          x: width * nextPage,
-          animated: true,
-        });
-        setEventCurrentIndex(nextPage);
+        autoHide: true
+      });
+      return;
+    }
+  }
+  //Handle Uplaod state
+  const updateUploadState = (data) => {
+    setUpload(data);
+    console.log("uploadstate", data);
+  };
+  const handlePersist = (e) => {
+    e.p;
+  };
+  //Handle Fetch Categories Types or Mass Seasons
+  const FetchCopyTypes = async (e) => {
+    setLocation({ x: e.nativeEvent?.locationX, y: e.nativeEvent?.pageY });
+    setShowCategory(!showCategory);
+    if (!checkNetwork()) {
+      Toast.show({
+        text1: "No Active internet Connection",
+        text2: "Continueing in Offline mode",
+        type: "info",
+        position: "top",
+
+        autoHide: true
+      });
+      return;
+    }
+
+    if (copiesType?.types?.length > 0) {
+      return;
+    }
+    const result = await dispatch(FetchCopiesType());
+    // console.log(result)
+    if (FetchCopiesType.fulfilled.match(result)) {
+      console.log(result.payload);
+      setShowCategory(true);
+      return;
+    }
+    if (FetchCopiesType.rejected.match(result)) {
+      // console.log(result.payload)
+      Toast.show({
+        text1: "Failed to fetch Song Copies",
+        text2: "Please try again later",
+        type: "error",
+        position: "top",
+
+        autoHide: true
+      });
+      return;
+    }
+  };
+  //Documeent Pickeer for Uploading
+  const pickPdf = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: "application/pdf",
+        copyToCacheDirectory: true
+      });
+      // console.log(result.assets[0].name)
+      if (!result.canceled) {
+        setSelectedPdf(result.assets[0]); // You can access the file details here
+        console.log("PDF URI:", result);
+      } else {
+        return;
       }
-    }, 10000);
+    } catch (error) {
+      console.log("Error picking PDF:", error);
+    }
+  };
+  //Upload New Song
+  const uploadNewSong = async () => {
+    if (!selectedPdf) {
+      Toast.show({
+        text1: "Please select a PDF",
+        text2: "",
+        type: "error",
+        position: "top",
 
-    return () => clearInterval(intervalId);
-  }, [currentEventIndex, events, dispatch]);
+        autoHide: true
+      });
+      return;
+    }
+    if (!song_name) {
+      Toast.show({
+        text1: "Please enter song name",
+        text2: "",
+        type: "error",
+        position: "top",
 
-  // constants Setting Up
-  const height = Dimensions.get("screen").height;
-  const width = Dimensions.get("screen").width;
+        autoHide: true
+      });
+      return;
+    }
+    if (!song_composer) {
+      Toast.show({
+        text1: "Please enter song composer",
+        text2: "",
+        type: "error",
+        position: "top",
 
-  //Use Selecto Content
+        autoHide: true
+      });
+      return;
+    }
+    const body={
+      "song_name":song_name,
+      "song_composer":song_composer,
+      "selectedPdf": selectedPdf,
+      "chooseCategory": choosenCategory,
+      "choosenPart": choosenPart
+    }
+    const result = await dispatch(UploadSong(body));
+    if (UploadSong.fulfilled.match(result)) {
+      Toast.show({
+        text1: "Song Uploaded Successfully",
+        text2: "",
+        type: "success",
+        position: "top",
+
+        autoHide: true
+      });
+      setUpload(false);
+      return;
+    }
+    if (UploadSong.rejected.match(result)) {
+      Toast.show({
+        text1: "Failed to upload Song",
+        text2: "Please try again later",
+        type: "error",
+        position: "top",
+
+        autoHide: true
+      });
+      return;
+    }
+  };
 
   return (
-    <ScrollView
-      showsHorizontalScrollIndicator={false}
-      className="flex-1 bg-primary relative"
-      style={{ flex: 1 }}
-      stickyHeaderIndices={[0]}
-    >
-      <View className=" h-28    bg-primary w-full items-end py-2 flex flex-row border border-t-0 border-white rounded-b-3xl justify-between  px-4">
-        <View className="flex flex-row items-center max-w-[60%] ">
-          <Avatar
-            source={require("../../../assets/Invite.png")}
-            rounded
-            size="medium"
-            containerStyle={{ borderWidth: 1, borderColor: "white" }}
-          />
-          <View className="mx-2">
-            <Text className="text-white font-bold text-md">
-              Hello,Ngoga Innocent Patrick
-            </Text>
-            <Text className="text-slate-500 text-xs">
-              Welcome to Catholic Music
-            </Text>
-          </View>
-        </View>
-        <TouchableOpacity className="relative">
-          <View className="  right-0 top-0 z-10 rounded-full flex flex-row-reverse  ">
-            <Text className="text-white z-20 text-xs animate-pulse">10</Text>
-            <View className="-mr-4">
-              <Ionicons
-                name="notifications-circle-sharp"
-                size={50}
-                color="purple"
-              />
-            </View>
-          </View>
-        </TouchableOpacity>
+    <View className="bg-black flex-1">
+      <Header title="Catholic Songs" uploadState={updateUploadState} />
+      {copyLoading && <ActivityIndicator color={COLORS.white} />}
+      {/* Toast outside of ScrollView */}
+      <View className="z-50" style={{zIndex:10000}}>
+        <Toast />
       </View>
-      {eventLoading && <ActivityIndicator size={30} color="purple" />}
-      <ScrollView
-        ref={scrollViewRef}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        onMomentumScrollEnd={(event) => {
-          const contentOffsetX = event.nativeEvent.contentOffset.x;
-          const index = Math.round(contentOffsetX / width);
-          setEventCurrentIndex(index);
-        }}
-        className="flex-1"
-        style={{ flex: 1, width: width }}
-        contentContainerStyle={{
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        {events.length > 0 &&
-          events?.map((item, index) => {
-            return (
-              <View
-                key={index}
-                className=" items-center self-center justify-center px-2 pt-4 rounded-md"
-                style={{
-                  width: width,
-                  height: height / 3.2,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Image
-                  source={{ uri: item?.thumbnail }}
-                  className=" z-20 w-full h-full self-center rounded-2xl"
-                  resizeMode="cover"
-                  style={{}}
-                />
-              </View>
-            );
-          })}
-      </ScrollView>
-      <View className="flex flex-row self-center gap-x-2 my-1">
-        {events.length > 0 &&
-          events.map((item, index) => {
-            return (
-              <View
-                key={index}
-                className={`rounded-full h-2 ${
-                  currentEventIndex == index
-                    ? "w-5 bg-mypurple"
-                    : "w-2 bg-slate-600"
-                } `}
-              />
-            );
-          })}
-      </View>
-      <View className="flex flex-row justify-between px-3 py-2 my-1">
-        <Text className="text-white text-lg font-bold">Trending Songs</Text>
-        <TouchableOpacity>
-          <Text className="text-mypurple font-bold text-lg">See All</Text>
-        </TouchableOpacity>
-      </View>
-      {tredingLoading && <ActivityIndicator size={30} color="purple" />}
-      <ScrollView
-        className="flex-1  mx-2 "
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        pagingEnabled
-      >
-        {trendings.length > 0 ? (
-          trendings.map((item, index) => {
-            return (
-              <TouchableOpacity
-                key={index}
-                style={{ height: height / 3.8, width: width / 2.5 }}
-                className="rounded-lg mr-2 z-10  border border-white"
-              >
-                <Image
-                  source={{ uri: item.thumbnail }}
-                  className="flex-1 rounded-lg "
-                  resizeMode="cover"
-                />
 
-                {/* <YoutubePlayer
-                videoId={item.link.split("=")[1]}
-                height={500}
-                // style={{ height: height / 2, flex: 1 }}
-              /> */}
-              </TouchableOpacity>
-            );
-          })
-        ) : (
-          <Text className="text-white font-bold">No trendings Available</Text>
-        )}
-      </ScrollView>
+      {/* Main Scrollable Content */}
+      <ScrollView className="flex-1 px-2" refreshControl={<RefreshControl onRefresh={()=>dispatch(SongCategory())}  refreshing={copyLoading}/>}>
+        {/* Circular Progress */}
+        <CircularProgress songs_number={songCategories?.songs_number} />
 
-      <View className="flex flex-row justify-between px-3 py-2 my-1">
-        <Text className="text-white text-lg font-bold">Recommended</Text>
-        <TouchableOpacity onPress={() => navigation.navigate("Communinty")}>
-          <Text className="text-mypurple font-bold text-lg">Musicians</Text>
-        </TouchableOpacity>
-      </View>
-      {musicianLoading && <ActivityIndicator size={30} color="purple" />}
-      <ScrollView
-        horizontal
-        alwaysBounceHorizontal
-        className="flex-1 mx-2 py-2 gap-x-1"
-      >
-        {musicians.length > 0 ? (
-          musicians.slice(0, 15).map((item, index) => {
-            return (
-              <TouchableOpacity
-                onPress={() =>
-                  navigation.navigate("Communinty", {
-                    screen: "musician_profile",
-                    params: {
-                      id: item.id,
-                    },
-                  })
-                }
-                key={index}
-                className="items-center mx-1"
-              >
-                <Avatar
-                  source={
-                    item.user_data.profile
-                      ? { uri: item?.user_data?.profile }
-                      : require("../../../assets/DefualtAvatar.jpg")
-                  }
-                  size="large"
-                  rounded
-                />
-                <Text className="text-white font-bold">
-                  {item?.user_data?.username}
+        {/* Category List */}
+        <View className="my-4 mt-8 flex-1">
+          {songCategories?.categories?.map((category) => (
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate("song_category", {
+                  category: category
+                })
+              }
+              key={category.id}
+              className="py-2 px-4 bg-white rounded-lg shadow-md shadow-black flex flex-row items-center justify-between"
+            >
+              <Text className="font-bold text-lg">{category.name}</Text>
+              <View className="h-10 w-10 items-center justify-center rounded-full border-2 border-gray-300">
+                <Text>
+                  {category?.song_count < 99 ? category?.song_count : "99+"}
                 </Text>
-              </TouchableOpacity>
-            );
-          })
-        ) : (
-          <Text>No recommended Musician</Text>
-        )}
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
       </ScrollView>
-      <Text className="text-white text-lg text-center my-1">
-        Recent Uploaded Songs
-      </Text>
-      <View className="relative flex-1">
-        {copies?.copies?.length > 0 ? (
-          copies?.copies?.slice(0, 10).map((item, index) => {
-            return (
-              <View
-                key={index}
-                className=" flex-row  items-center justify-between mx-2 border border-slate-300 py-4 my-1  rounded-md px-2 "
-                style={{ position: "relative" }}
-              >
-                <View>
-                  <Text className="text-white">{item.name}</Text>
-                </View>
-                <TouchableOpacity
-                  onPress={() => {
-                    setChoosenCopy(item);
-                    setChoosenCopyIndex(index);
+      <Modal
+        className="flex-1"
+        animationType="fade"
+        transparent
+        onRequestClose={() => setUpload(false)}
+        visible={upload}
+      >
+        <View
+          className="flex-1 "
+          style={{ backgroundColor: "rgba(0,0,0,0.7)" }}
+        >
+          {/* When clicking outside (on the background), close the modal */}
+          <TouchableWithoutFeedback onPress={() => setUpload(false)}>
+            <View className="flex-1 ">
+              {/* Inner modal content, which should not trigger modal close */}
+              <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+                <View
+                  className="absolute bottom-0 w-full flex flex-col rounded-t-3xl bg-white  items-center h-[70%]"
+                  style={{
+                    backgroundColor: "white",
+                    padding: 20,
+                    borderRadius: 10
                   }}
                 >
-                  <Entypo name="dots-three-vertical" size={24} color="white" />
-                  {choosenCopyIndex == index && (
-                    <View
-                      className=" overflow-hidden  bg-white -bottom-4 py-2 -right-2 w-20 items-center rounded-md"
-                      style={{
-                        elevation: 50000,
-                        zIndex: 5000,
-                        position: "absolute",
-                      }}
+                  <Text className="text-xl font-bold">Add New Song </Text>
+                  {/* Any other inner elements like buttons */}
+                  {copyLoading && <ActivityIndicator />}
+                  <ScrollView
+                    showsVerticalScrollIndicator={false}
+                    className="py-3"
+                  >
+                    <TouchableOpacity
+                      onPress={() => pickPdf()}
+                      className="bg-gray-300 py-3 px-2 items-center justify-center w-[100%] rounded-md mt-3 "
+                      style={{ width: dimensions.width * 0.8 }}
                     >
-                      <TouchableOpacity
-                        className="py-2 "
-                        onPress={() => {
-                          setChoosenCopyIndex();
+                      <Text className="font-bold text-lg">
+                        {selectedPdf?.name || `Choose a Song`}
+                      </Text>
+                    </TouchableOpacity>
+
+                    <View className="w-full text-center  my-2 mt-2">
+                      <Text>Song's Name</Text>
+                      <TextInput
+                        value={song_name}
+                        onChangeText={(e) => setSongName(e)}
+                        placeholder="Akira Dawe"
+                        className="my-1 border border-gray-400 w-[100%] py-3 px-2 rounded-md "
+                      />
+                    </View>
+                    <View className="w-full text-center ">
+                      <Text>Song's Composer</Text>
+                      <TextInput
+                        value={song_composer}
+                        onChangeText={(e) => setSongComposer(e)}
+                        placeholder="Joe Doe"
+                        className="my-1 border border-gray-400 w-[100%] py-3 px-2 rounded-md "
+                      />
+                    </View>
+                    <Text className="mt-3 mb-1 ">Mass Part</Text>
+                    <TouchableOpacity
+                      onPress={() => setShowPart(!showpart)}
+                      className=" bg-gray-300 py-2 px-2 items-center justify-center w-[100%] rounded-md "
+                      style={{ width: dimensions.width * 0.8 }}
+                    >
+                      <Text className="font-bold text-lg">
+                        {choosenPart.name || `Song Part`}
+                      </Text>
+                    </TouchableOpacity>
+                    {showpart && (
+                      <ScrollView
+                        className="flex-1 absolute w-full rounded-lg"
+                        style={{
+                          backgroundColor: "rgba(0,0,0,0.9)",
+                          zIndex: 70
                         }}
                       >
-                        <Text className="font-bold">View</Text>
-                      </TouchableOpacity>
-                      <View className="h-1 w-[90%] bg-black bg-opacity-10" />
-                      <TouchableOpacity className="py-2">
-                        <Text className="font-bold">share</Text>
-                      </TouchableOpacity>
-                      {/* <TouchableOpacity className="my-1">
-                        <Text>View</Text>
-                      </TouchableOpacity> */}
-                    </View>
-                  )}
-                </TouchableOpacity>
-              </View>
-            );
-          })
-        ) : (
-          <Text className="text-white font-bold  text-center">
-            No Uploaded Song Found
-          </Text>
-        )}
-      </View>
-      <Text className="text-white mx-4 py-4 text-2xl">
-        Catholic Songs Advertising Songs
-      </Text>
-
-      {/* <YoutubePlayer
-        videoId="c9clqS02Djc"
-        height={500}
-        // style={{ height: height / 2, flex: 1 }}
-      /> */}
-    </ScrollView>
+                        {songCategories?.categories?.map((item, index) => {
+                          return (
+                            <TouchableOpacity
+                              onPress={() => {
+                                setChoosenPart(item);
+                                setShowPart(false);
+                              }}
+                              key={index}
+                              style={{
+                                padding: 10,
+                                borderBottomWidth: 1,
+                                borderColor: "gray",
+                                backgroundColor: "white"
+                              }}
+                            >
+                              <Text>{item.name}</Text>
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </ScrollView>
+                    )}
+                    <Text className="mt-3 mb-1 font-bold  text-gray-700">
+                      Liturgy Season
+                    </Text>
+                    <TouchableOpacity
+                      onPress={(e) => FetchCopyTypes(e)}
+                      className="bg-gray-300 py-2 px-2 items-center justify-center w-[100%] rounded-md "
+                      style={{ width: dimensions.width * 0.8 }}
+                    >
+                      <Text className="font-bold text-lg">
+                        {choosenCategory.name || `Song Category`}
+                      </Text>
+                    </TouchableOpacity>
+                    {showCategory && (
+                      <ScrollView
+                        className="absolute -bottom-10 flex-1 w-full rounded-lg border bg-gray-200 border-gray-200"
+                        style={{ zIndex: 70 }}
+                      >
+                        {copiesType?.types?.map((item, index) => {
+                          return (
+                            <TouchableOpacity
+                              onPress={() => {
+                                setChoosenCategory(item);
+                                setShowCategory(false);
+                              }}
+                              key={index}
+                              style={{
+                                padding: 10,
+                                borderBottomWidth: 1,
+                                borderColor: "gray",
+                                backgroundColor: "white"
+                              }}
+                            >
+                              <Text>{item.name}</Text>
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </ScrollView>
+                    )}
+                    <TouchableOpacity onPress={()=>uploadNewSong()}
+                      className="bg-primary py-3 px-2 mb-4 items-center justify-center w-[100%] rounded-md mt-3 "
+                      style={{ width: dimensions.width * 0.8 }}
+                    >
+                      <Text className="font-bold text-white text-lg">
+                        Upload Song
+                      </Text>
+                    </TouchableOpacity>
+                  </ScrollView>
+                </View>
+              </TouchableWithoutFeedback>
+            </View>
+          </TouchableWithoutFeedback>
+        </View>
+      </Modal>
+    </View>
   );
 };
 

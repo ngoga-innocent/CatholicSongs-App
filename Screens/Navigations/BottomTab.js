@@ -1,7 +1,7 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import Home from "../Pages/SongPage/Home";
-import Setting from "../Pages/Other/Setting";
-import SongStack from "./SongStack";
+// import Home from "../Pages/Archives/Home";
+// import Setting from "../Pages/Other/Setting";
+import SongStack from "./ArchiveStack";
 import { Dimensions, Platform, View, Text } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { Feather } from "@expo/vector-icons";
@@ -9,6 +9,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { COLORS } from "../Components/Global";
 import HomePageNavigation from "./HomeNavigation";
 import CommunityStack from "./CommunityStack";
+import ArchiveStack from "./ArchiveStack";
 export default function BottomTab() {
   const Tab = createBottomTabNavigator();
   const width = Dimensions.get("screen").width;
@@ -19,65 +20,63 @@ export default function BottomTab() {
         tabBarShowLabel: false,
         tabBarHideOnKeyboard: true,
         tabBarAllowFontScaling: true,
+        tabBarActiveBackgroundColor:COLORS.black,
+        
         tabBarStyle: {
           position: "absolute",
 
-          backgroundColor: "#fff",
-          height: "8%",
-          left: "2%",
-          right: "2%",
-          alignSelf: "center",
-          borderRadius: 10,
-          alignItems: "center",
-          justifyContent: "center",
-          elevation: 5,
-          shadowColor: "#d1d6eb",
-          shadowOffset: 3,
-          shadowOpacity: 0.25,
-          shadowRadius: 10,
+          backgroundColor: COLORS.black,
+          elevation: 0, // Remove shadow on Android
+          shadowOpacity: 0, // Remove shadow on iOS
+          borderTopWidth: 0, // Remove the top border (divider)
+         
         },
+        tabBarStyle: {
+          backgroundColor:COLORS.black
+        }
       }}
     >
+      
+      <Tab.Screen
+        name="archive"
+        component={ArchiveStack}
+        options={{
+          headerShown: false,
+          tabBarIcon: ({ focused }) => (
+            <View className={`${focused?'bg-white px-5 rounded-full':null} py-1 items-center justify-center`}>
+              <MaterialIcons
+                name="library-music"
+                size={30}
+                color={focused ? COLORS.black : COLORS.white}
+              />
+              {/* <Text
+                className="font-bold "
+                style={{ color: focused ? COLORS.purple : COLORS.black }}
+              >
+                SONGS
+              </Text> */}
+            </View>
+          ),
+        }}
+      />
       <Tab.Screen
         name="Home"
         component={HomePageNavigation}
         options={{
           headerShown: false,
           tabBarIcon: ({ focused }) => (
-            <View className="items-center justify-center">
+            <View className={`${focused?'bg-white px-5 rounded-full':null} py-1 items-center justify-center`}>
               <FontAwesome
                 name="home"
-                size={24}
-                color={focused ? COLORS.purple : COLORS.black}
+                size={30}
+                color={focused ? COLORS.black : COLORS.white}
               />
-              <Text
+              {/* <Text
                 className="font-bold "
-                style={{ color: focused ? COLORS.purple : COLORS.black }}
+                style={{ color: focused ? COLORS.white : COLORS.black }}
               >
                 HOME
-              </Text>
-            </View>
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Songs"
-        component={SongStack}
-        options={{
-          headerShown: false,
-          tabBarIcon: ({ focused }) => (
-            <View className="items-center justify-center">
-              <MaterialIcons
-                name="library-music"
-                size={24}
-                color={focused ? COLORS.purple : COLORS.black}
-              />
-              <Text
-                className="font-bold "
-                style={{ color: focused ? COLORS.purple : COLORS.black }}
-              >
-                SONGS
-              </Text>
+              </Text> */}
             </View>
           ),
         }}
@@ -88,23 +87,23 @@ export default function BottomTab() {
         options={{
           headerShown: false,
           tabBarIcon: ({ focused }) => (
-            <View className="items-center justify-center">
+            <View className={`${focused?'bg-white px-5 rounded-full':null} py-1 items-center justify-center`}>
               <MaterialIcons
                 name="manage-accounts"
-                color={focused ? COLORS.purple : COLORS.black}
-                size={24}
+                color={focused ? COLORS.black : COLORS.white}
+                size={30}
               />
-              <Text
+              {/* <Text
                 className="font-bold "
                 style={{ color: focused ? COLORS.purple : COLORS.black }}
               >
                 COMMUNITY
-              </Text>
+              </Text> */}
             </View>
           ),
         }}
       />
-      <Tab.Screen
+      {/* <Tab.Screen
         name="Setting"
         component={Setting}
         options={{
@@ -114,7 +113,7 @@ export default function BottomTab() {
               <Feather
                 name="settings"
                 size={24}
-                color={focused ? COLORS.purple : COLORS.black}
+                color={focused ? COLORS.purple : COLORS.white}
               />
 
               <Text
@@ -126,7 +125,7 @@ export default function BottomTab() {
             </View>
           ),
         }}
-      />
+      /> */}
     </Tab.Navigator>
   );
 }

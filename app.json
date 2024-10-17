@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "CatholicSongs",
+    "name": "Catholic Songs",
     "slug": "CatholicSongs",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -19,22 +19,43 @@
           "savePhotosPermission": "Allow CatholicSongs to save photos.",
           "isAccessMediaLocationEnabled": true
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you share them with your friends."
+        }
       ]
     ],
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Allow CatholicSongs to access your photos.",
+        "NSPhotoLibraryAddUsageDescription": "Allow CatholicSongs to save photos."
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_MEDIA_LOCATION"
+      ],
+      "package": "com.SailorPin.MusicSheets"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/icon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "5db0ed18-74dc-46ae-b6d5-606efaee0de3"
+      }
     }
   }
 }

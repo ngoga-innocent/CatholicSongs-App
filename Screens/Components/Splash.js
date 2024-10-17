@@ -10,12 +10,13 @@ const Splash = () => {
     
     const onAnimationEnd = async() => {
         const token= await AsyncStorage.getItem('token')
-        if (token) {
-            navigation.navigate('Tab')
-        }
-        else {
-            navigation.navigate('Auth')
-        }
+        // if (token) {
+        //     navigation.navigate('Tab')
+        // }
+        // else {
+        //     navigation.navigate('Auth')
+        // }
+        navigation.navigate('Tab')
     }
     return (
         <View className='flex-1 items-center justify-center bg-[#282D3B]'>

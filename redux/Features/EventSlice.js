@@ -7,7 +7,7 @@ const initialState = {
   eventLoading: false,
   trendingLoading: false,
   isError: false,
-  erroMessage: "",
+  erroMessage: ""
 };
 export const FetchEvent = createAsyncThunk(
   "FetchEvents",
@@ -18,7 +18,7 @@ export const FetchEvent = createAsyncThunk(
       const requestOptions = {
         method: "GET",
         redirect: "follow",
-        headers: myheaders,
+        headers: myheaders
       };
       const res = await fetch(`${Url}/advertise`, requestOptions);
       if (!res.ok) {
@@ -40,7 +40,7 @@ export const FetchTrendings = createAsyncThunk(
       const requestOptions = {
         method: "GET",
         redirect: "follow",
-        headers: myheaders,
+        headers: myheaders
       };
       const res = await fetch(`${Url}/advertise/trendings`, requestOptions);
       if (!res.ok) {
@@ -53,7 +53,65 @@ export const FetchTrendings = createAsyncThunk(
     }
   }
 );
-
+export const AddNewEvent = createAsyncThunk(
+  "create an Event",
+  async (kwargs, { rejectWithValue }) => {
+    try {
+      const myHeaders = new Headers({ "Content-Type": "application/json" });
+      myHeaders.append("Content-Type", "multipart/form-data");
+      const formData = new FormData();
+      formData.append("title", kwargs.title);
+      formData.append("description", kwargs.description);
+      formData.append("location", kwargs.location);
+      formData.append("date", kwargs.date);
+      formData.append("thumbnail", kwargs.thumbnail[0]);
+      kwargs.thumbnail.forEach((event_image) => {
+        formData.append("other_image", event_image);
+      });
+      const body = formData;
+      const requestOptions = {
+        method: "POST",
+        redirect: "follow",
+        headers: myHeaders,
+        body: body
+      };
+      const res = await fetch(`${Url}/advertise/`, requestOptions);
+      const result = await res.json();
+      console.log(result);
+      if (!res.ok) {
+        return rejectWithValue(result);
+      }
+      return result;
+    } catch (error) {
+      return rejectWithValue({
+        details: "Failed to Create an event please try again Later"
+      });
+    }
+  }
+);
+export const AddNewReleasedSong = createAsyncThunk(
+  "Create new release",
+  async (kwargs, { rejectWithValue }) => {
+    const myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+    const requestOptions = {
+      method: "POST",
+      redirect: "follow",
+      headers: myHeaders,
+      body: JSON.stringify(kwargs)
+    };
+    try {
+      const res = await fetch(`${Url}/advertise/trendings/`, requestOptions);
+      const data = await res.json();
+      if (!res.ok) {
+        return rejectWithValue(data);
+      }
+      return data;
+    } catch (error) {
+      return rejectWithValue({ details: "unexpected Error" });
+    }
+  }
+);
 const EventSlice = createSlice({
   name: "EventSlice",
   initialState,
@@ -82,7 +140,28 @@ const EventSlice = createSlice({
         state.isError = true;
         state.erroMessage = action.payload;
       });
-  },
+    builder
+      .addCase(AddNewEvent.pending, (state) => {
+        state.eventLoading = true;
+      })
+      .addCase(AddNewEvent.fulfilled, (state, action) => {
+        state.eventLoading = false;
+      })
+      .addCase(AddNewEvent.rejected, (state) => {
+        state.eventLoading = false;
+      });
+    builder
+      .addCase(AddNewReleasedSong.pending, (state) => {
+        state.trendingLoading = true;
+      })
+      .addCase(AddNewReleasedSong.fulfilled, (state, action) => {
+        state.trendings = [...state.trendings, ...action.payload.response];
+        state.trendingLoading = false;
+      })
+      .addCase(AddNewReleasedSong.rejected, (state) => {
+        state.trendingLoading = false;
+      });
+  }
 });
 
 export default EventSlice.reducer;

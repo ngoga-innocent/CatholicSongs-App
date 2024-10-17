@@ -1,6 +1,7 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import HomePage from '../Pages/HomePages/HomePage'
-
+import SongCategories from '../Pages/HomePages/SongCategory'
+import Notification from '../Pages/HomePages/Notification'
 const HomePageNavigation = () => {
     const Stack = createNativeStackNavigator()
     return (
@@ -8,6 +9,8 @@ const HomePageNavigation = () => {
             headerShown:false
         }}>
             <Stack.Screen name='homepage' component={HomePage} />
+            <Stack.Screen name='song_category' component={SongCategories} />
+            <Stack.Screen name='notification' component={Notification} />
         </Stack.Navigator>
     )
 }

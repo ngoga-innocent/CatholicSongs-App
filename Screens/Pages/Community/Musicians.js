@@ -6,9 +6,15 @@ import {
   TouchableOpacity,
   TextInput,
   Dimensions,
+  Modal,
+  TouchableWithoutFeedback
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
-import { FetchMusician } from "../../../redux/Features/MusicianSlice";
+import {
+  FetchMusician,
+  FetchMusicianSkills,
+  AddMusician
+} from "../../../redux/Features/MusicianSlice";
 import { FontAwesome } from "@expo/vector-icons";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Avatar } from "react-native-elements";
@@ -16,22 +22,39 @@ import { Ionicons } from "@expo/vector-icons";
 import { Entypo } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import * as Animatable from "react-native-animatable";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import AntDesign from "@expo/vector-icons/AntDesign";
+import { COLORS, dimensions } from "../../Components/Global";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { ActivityIndicator } from "react-native";
+import Toast from "react-native-toast-message";
 const Musicians = () => {
+  const inset = useSafeAreaInsets();
   const dispatch = useDispatch();
   const [filter_key, setFilterKey] = useState("");
   const [filter_type, setFilterType] = useState([]);
   const [filteredMusicians, setFilteredMusicians] = useState([]);
+  const [showJoinCommunity, setShowJoinCommunity] = useState(false);
+  const [choosenSkills, setChoosenSkills] = useState([]);
+  const [localtion, setLocation] = useState("");
+  const [description, setDescription] = useState("");
+  const [phone_Number, setPhoneNumber] = useState("");
   const height = Dimensions.get("screen").height;
 
   const navigation = useNavigation();
-  const { musicians, musicianLoading, isError } = useSelector(
+  const { musicians, musicianLoading, isError, musician_skills } = useSelector(
     (state) => state.Musicians
   );
+  console.log(musician_skills);
   useEffect(() => {
     if (musicians.length == 0) {
       dispatch(FetchMusician());
     }
   }, [dispatch]);
+  useEffect(() => {
+    fetchMusicianSkills();
+  }, []);
+  //Filtering
   useEffect(() => {
     if (filter_key != "") {
       const filtered = musicians.filter(
@@ -74,15 +97,80 @@ const Musicians = () => {
       setFilteredMusicians(musicians);
     }
   }, [filter_type]);
+  //Fetch Musician skills
+  const fetchMusicianSkills = async () => {
+    const result = await dispatch(FetchMusicianSkills());
+    if (FetchMusicianSkills.rejected.match(result)) {
+      console.log("Failed to fetch musician skills", result.payload);
+    }
+  };
   const skills = ["organist", "pianist", "conductor"];
+  const handleJoinCommunity = async () => {
+    const token=await AsyncStorage.getItem("token")
+    if(!token){
+      navigation.navigate("Auth",{
+        screen:"Login"
+      })
+      return
+    }
+    setShowJoinCommunity(!showJoinCommunity);
+  };
+  //Joining Community
+  const JoinCommunity=async()=>{
+    
+    //console.log("Joining community", choosenSkills, localtion, description, phone_number)
+    const result = await dispatch(AddMusician({"skills":choosenSkills, "location":localtion, "description":description, "phone_number":phone_Number}));
+    if(AddMusician.rejected.match(result)){
+      console.log("Failed to join community", result);
+      setShowJoinCommunity(false)
+      Toast.show({
+        text1:result?.payload?.detail?.user?'Already Joined the community':result?.payload?.detail,
+        text2:"Please try again later or contact the Administrator",
+        type:"error",
+        autoHide:true
+      })
+      
+      return 
+    }
+    if(AddMusician.fulfilled.match(result)){
+      setShowJoinCommunity(false)
+      Toast.show({
+        text1:"You have successfully joined the community",
+        type:"success",
+        autoHide:true
+      })
+      dispatch(FetchMusician())
+      return
+    }
+  }
   return (
     <ScrollView
       stickyHeaderIndices={[0]}
-      className="relative bg-primary"
-      contentContainerStyle={{ paddingBottom: height / 6.5, flexGrow: 10 }}
+      className="relative bg-black px-2"
+      contentContainerStyle={{ paddingBottom: height / 5, flexGrow: 10 }}
     >
-      <View className="bg-primary pt-14 pb-2 mb-2">
-        <View className="flex flex-row rounded-full border border-white mb-2 mx-2 items-center px-2">
+
+      <View className="bg-black pt-14 pt-3 pb-2 mb-2">
+      <View className="z-50 w-full items-center justify-center">
+          <Toast />
+          </View>
+        <View
+          style={{ paddingTop: inset.top }}
+          className="mb-2 flex flex-row items-center justify-between"
+        >
+         
+          <Text className="text-3xl  font-bold text-white">
+            Musicians Community
+          </Text>
+          <TouchableOpacity
+            onPress={handleJoinCommunity}
+            className="bg-white py-2 px-4 rounded-full items-center justify-center"
+          >
+            <Text classsName="font-bold text-lg">Join</Text>
+            <AntDesign name="rightcircle" size={24} color="black" />
+          </TouchableOpacity>
+        </View>
+        <View className="flex flex-row rounded-full border border-white mb-2  items-center px-2">
           <FontAwesome
             name="search"
             size={24}
@@ -90,15 +178,15 @@ const Musicians = () => {
             className="rotate-90"
           />
           <TextInput
-            className="flex-1 bg-transparent text-slate-200 py-2 w-[90%] self-end mr-3 rounded-md my-1 px-2"
+            className="flex-1 bg-transparent text-slate-200 py-3 w-[100%] self-end mr-3 rounded-md my-1 px-2"
             placeholder="Search a musician"
             placeholderTextColor="white"
             value={filter_key}
             onChangeText={(e) => setFilterKey(e)}
           />
-          <TouchableOpacity>
+          
             <MaterialIcons name="filter-alt" size={24} color="white" />
-          </TouchableOpacity>
+         
         </View>
 
         <View className="sticky top-2 flex flex-row justify-end gap-x-2 mx-3 items-center">
@@ -121,25 +209,21 @@ const Musicians = () => {
             );
           })}
         </View>
-        <Animatable.View
-          className="self-end  z-20 border border-white py-2 px-2 rounded-md"
-          animation="pulse"
-          iterationCount="infinite"
-          duration={3000}
-        >
-          <TouchableOpacity>
-            <Text className="text-white">Join Community</Text>
-          </TouchableOpacity>
-        </Animatable.View>
       </View>
-
-      <View className="w-full flex flex-row flex-wrap  gap-2 mt-3">
+      
+      {musicianLoading && <ActivityIndicator color={COLORS.white} size={dimensions.width * 0.02} />}  
+      <View className="w-full flex flex-row flex-wrap  gap-2">
         {filteredMusicians.length > 0 &&
           filteredMusicians.map((item, index) => {
             return (
-              <View
+              <TouchableOpacity
+                onPress={() =>
+                  navigation.navigate("musician_profile", {
+                    id: item.id
+                  })
+                }
                 key={index}
-                className="flex flex-col justify-between w-[47%] bg-white rounded-md items-center py-2"
+                className="flex flex-row w-full  rounded-3xl p-1 items-center rounded-md items-center"
               >
                 <Avatar
                   source={
@@ -150,61 +234,180 @@ const Musicians = () => {
                   rounded
                   size="large"
                 />
-                <Text className="font-bold">{item?.user_data?.username}</Text>
-                <View className="flex flex-row justify-between gap-x-2">
-                  <View className="flex flex-row items-center justify-between">
-                    <Text className="text-xs font-bold">advised</Text>
-                    {item?.recommended ? (
-                      <Ionicons
-                        name="checkmark-circle-sharp"
-                        size={12}
-                        color="green"
-                      />
-                    ) : (
-                      <Entypo name="circle-with-cross" size={12} color="red" />
-                    )}
+                <View className="flex flex-col flex-1 mx-2 ">
+                  <View className="flex flex-row items-center justify-between ">
+                    <Text
+                      className="font-bold  text-md text-gray-200"
+                      style={{ fontSize: 16 }}
+                    >
+                      {item?.user_data?.username}
+                    </Text>
+                    <View className="flex flex-row items-center gap-x-2">
+                      <View className="flex flex-row items-center justify-between">
+                        <Text className="  text-gray-200 font-bold">
+                          Verified
+                        </Text>
+                        {item?.verified ? (
+                          <Ionicons
+                            name="checkmark-circle-sharp"
+                            size={12}
+                            color="green"
+                          />
+                        ) : (
+                          <Entypo
+                            name="circle-with-cross"
+                            size={12}
+                            color="red"
+                          />
+                        )}
+                      </View>
+                    </View>
                   </View>
-                  <View className="flex flex-row items-center justify-between">
-                    <Text className="text-xs font-bold">Verified</Text>
-                    {item?.verified ? (
-                      <Ionicons
-                        name="checkmark-circle-sharp"
-                        size={12}
-                        color="green"
-                      />
-                    ) : (
-                      <Entypo name="circle-with-cross" size={12} color="red" />
-                    )}
+                  <View className="">
+                    <View className="flex flex-row flex-wrap gap-x-1 ">
+                      {item?.skills_data?.length > 0 &&
+                        item?.skills_data?.map((skill, skillindex) => {
+                          return (
+                            <View key={skillindex}>
+                              <Text className="text-gray-400">
+                                {skill.name},
+                              </Text>
+                            </View>
+                          );
+                        })}
+                    </View>
                   </View>
                 </View>
-                <View className=" items-center justify-center mx-2 my-2">
-                  <Text className="font-bold underline">Skills</Text>
-                  <View className="flex flex-row flex-wrap gap-x-1 items-center justify-center">
-                    {item?.skills_data?.length > 0 &&
-                      item?.skills_data?.map((skill, skillindex) => {
-                        return (
-                          <View key={skillindex}>
-                            <Text>{skill.name},</Text>
-                          </View>
-                        );
-                      })}
-                  </View>
-                </View>
-
-                <TouchableOpacity
-                  onPress={() =>
-                    navigation.navigate("musician_profile", {
-                      id: item.id,
-                    })
-                  }
-                  className="z-10 my-1 mt-2 bg-green-400 flex-end  w-[95%] self-center items-center  py-2 rounded-md"
-                >
-                  <Text className="font-bold">Profile</Text>
-                </TouchableOpacity>
-              </View>
+              </TouchableOpacity>
             );
           })}
       </View>
+      <Modal
+        animationType="slide"
+        transparent
+        visible={showJoinCommunity}
+        onRequestClose={() => setShowJoinCommunity(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.7)",
+            justifyContent: "flex-end" // Ensures modal content slides up from the bottom
+          }}
+        >
+          <TouchableWithoutFeedback onPress={() => setShowJoinCommunity(false)}>
+            <View style={{ flex: 1 }} />
+          </TouchableWithoutFeedback>
+
+          <Animatable.View
+            animation="slideInUp"
+            className="bg-white items-center h-[60%] rounded-t-3xl px-4 py-3 w-full"
+          >
+            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+              <View
+                style={{ width: "100%", alignItems: "center" }}
+                className="mb-4"
+              >
+                <Text className="text-xl font-bold mb-4 self-start text-gray-400">
+                  Join Musician Community
+                </Text>
+                {musicianLoading && <ActivityIndicator color={COLORS.black} size={dimensions.width * 0.02} />} 
+                {/* Add your form, content, or other views here */}
+                <ScrollView
+                  className="gap-y-2"
+                  contentContainerStyle={{
+                    alignItems: "start"
+                  }}
+                >
+                  <Text className=" mb-2 font-bold text-gray-500 text-lg">
+                    Choose Your Skills
+                  </Text>
+                  {musicianLoading?<ActivityIndicator color={COLORS.black} size={dimensions.width * 0.02} /> :<View className="flex flex-row flex-wrap w-[100%] items-center ">
+                    {musician_skills?.length > 0 &&
+                      musician_skills?.map((item, index) => {
+                        return (
+                          <TouchableOpacity
+                            onPress={() => {
+                              if (choosenSkills.includes(item.id)) {
+                                // If it is, remove it from the array
+                                setChoosenSkills(
+                                  choosenSkills.filter(
+                                    (skill) => skill !== item.id
+                                  )
+                                );
+                              } else {
+                                // If it's not, add it to the array
+                                setChoosenSkills([...choosenSkills, item.id]);
+                              }
+                            }}
+                            className={`${
+                              choosenSkills.includes(item.id)
+                                ? "bg-mygreen"
+                                : "bg-gray-400"
+                            }  py-2 px-3 mx-2 rounded-md`}
+                            key={index}
+                          >
+                            <Text>{item?.name}</Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                  </View>}
+                  <View
+                    className="text-center"
+                    style={{ width: dimensions.width * 0.85 }}
+                  >
+                    <Text className="text-lg font-bold text-gray-500">
+                      Where can we find you?
+                    </Text>
+                    <TextInput
+                      value={localtion}
+                      onChangeText={(e) => setLocation(e)}
+                      placeholder="Kigali ..."
+                      style={{ width: dimensions.width * 0.85 }}
+                      className="w-full border-gray-400 border rounded-md py-3 px-2"
+                    />
+                  </View>
+                  <View className="" style={{ width: dimensions.width * 0.85 }}>
+                    <Text className="text-lg font-bold text-gray-500">
+                      Describe yourself
+                    </Text>
+                    <TextInput
+                      value={description}
+                      onChangeText={(e) => setDescription(e)}
+                      placeholder="Am musician wwith the ability to support choir in music ..."
+                      multiline
+                      style={{
+                        width: dimensions.width * 0.85,
+                        maxHeight: dimensions.height * 0.12
+                      }}
+                      className="w-full border-gray-400 border rounded-lg py-3 px-2"
+                    />
+                  </View>
+                  <View className="" style={{ width: dimensions.width * 0.85 }}>
+                    <Text className="text-lg font-bold text-gray-500">
+                      How Can we contact you?
+                    </Text>
+                    <TextInput
+                      value={phone_Number}
+                      onChangeText={(e) => setPhoneNumber(e)}
+                      placeholder="+25078888888"
+                      className="w-[100%] border-gray-400 border rounded-md py-3 px-2"
+                    />
+                  </View>
+                  <TouchableOpacity onPress={()=>JoinCommunity()}
+                    style={{ width: dimensions.width * 0.85 }}
+                    className="flex-1  self-center items-center bg-primary py-4  rounded-lg"
+                  >
+                    <Text className="text-white font-bold">
+                      Join Musician Community
+                    </Text>
+                  </TouchableOpacity>
+                </ScrollView>
+              </View>
+            </TouchableWithoutFeedback>
+          </Animatable.View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
