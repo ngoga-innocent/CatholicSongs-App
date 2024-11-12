@@ -8,6 +8,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const initialState = {
   copyLoading: false,
+  searchLoading: false,
   copies: [],
   isError: false,
   message: "",
@@ -220,16 +221,17 @@ const CopiesSlice = createSlice({
     builder.addCase(FetchCopiesType.rejected, (state, action) => {
       state.isError = true;
       state.message = action.payload.message;
+      state.copyLoading=false
     });
 
     //Getting Copiesss
 
     builder.addCase(FetchCopies.pending, (state) => {
-      state.isLoading = true;
+      state.copyLoading = true;
     });
     builder.addCase(FetchCopies.fulfilled, (state, action) => {
       state.copies = action.payload;
-      state.isLoading = false;
+      state.copyLoading = false;
     });
     builder.addCase(FetchCopies.rejected, (state, action) => {
       state.isError = action.payload.message;
@@ -238,23 +240,23 @@ const CopiesSlice = createSlice({
 
     //Getting Song Categories
     builder.addCase(SongCategory.pending, (state) => {
-      state.isLoading = true;
+      state.copyLoading = true;
     });
     builder.addCase(SongCategory.fulfilled, (state, action) => {
       state.songCategories = action.payload;
-      state.isLoading = false;
+      state.copyLoading = false;
     });
     builder.addCase(SongCategory.rejected, (state, action) => {
       state.isError = true;
-      state.isLoading = false;
+      state.copyLoading = false;
     });
     //Getting Song of Category
     builder.addCase(GetSong.pending, (state) => {
-      state.isLoading = true;
+      state.copyLoading = true;
     });
     builder.addCase(GetSong.fulfilled, (state, action) => {
       state.copies = action.payload;
-      state.isLoading = false;
+      state.copyLoading = false;
     });
     builder.addCase(GetSong.rejected, (state, action) => {
       state.isError = action.payload.message;
@@ -262,27 +264,27 @@ const CopiesSlice = createSlice({
     });
     //Search Songs
     builder.addCase(SearchSong.pending, (state) => {
-      state.isLoading = true;
+      state.copyLoading = true;
     });
     builder.addCase(SearchSong.fulfilled, (state, action) => {
       state.copies = action.payload;
-      state.isLoading = false;
+      state.copyLoading = false;
     });
     builder.addCase(SearchSong.rejected, (state, action) => {
       state.isError = true;
-      state.isLoading = false;
+      state.copyLoading = false;
       // console.log(action.payload);
     });
     // Upload Song
     builder.addCase(UploadSong.pending, (state) => {
-      state.isLoading = true;
+      state.copyLoading = true;
     });
     builder.addCase(UploadSong.fulfilled, (state) => {
-      state.isLoading = false;
+      state.copyLoading = false;
     });
     builder.addCase(UploadSong.rejected, (state, action) => {
       state.isError = true;
-      state.isLoading = false;
+      state.copyLoading = false;
       console.log(action.payload);
     });
   }

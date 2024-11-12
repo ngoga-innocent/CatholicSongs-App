@@ -14,6 +14,8 @@ import Header from "../../Components/Header";
 import { useSelector, useDispatch } from "react-redux";
 import * as Network from "expo-network";
 import Toast from "react-native-toast-message";
+import { useTranslation } from "react-i18next";
+import '../../Components/i18n'
 import {
   SongCategory,
   FetchCopiesType,
@@ -24,7 +26,9 @@ import { useNavigation } from "@react-navigation/native";
 import * as Animatable from "react-native-animatable";
 import { COLORS, dimensions } from "../../Components/Global";
 import * as DocumentPicker from "expo-document-picker";
+import Menu from "../../Components/Menu";
 const HomePage = () => {
+  const {t}=useTranslation()
   const dispatch = useDispatch();
   const navigation = useNavigation();
   //Select Categories
@@ -38,6 +42,7 @@ const HomePage = () => {
   const [selectedPdf, setSelectedPdf] = useState(null);
   const [song_name, setSongName] = useState("");
   const [song_composer, setSongComposer] = useState("");
+  const [toggleMenu,setToggleMenu]=useState(false)
   // console.log(songCategories)
   //Dispatch
   useEffect(() => {
@@ -86,9 +91,9 @@ const HomePage = () => {
     setUpload(data);
     console.log("uploadstate", data);
   };
-  const handlePersist = (e) => {
-    e.p;
-  };
+  // const handlePersist = (e) => {
+  //   e.p;
+  // };
   //Handle Fetch Categories Types or Mass Seasons
   const FetchCopyTypes = async (e) => {
     setLocation({ x: e.nativeEvent?.locationX, y: e.nativeEvent?.pageY });
@@ -132,7 +137,7 @@ const HomePage = () => {
   const pickPdf = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: "application/pdf",
+        type: "*/*",
         copyToCacheDirectory: true
       });
       // console.log(result.assets[0].name)
@@ -215,18 +220,19 @@ const HomePage = () => {
   };
 
   return (
-    <View className="bg-black flex-1">
-      <Header title="Catholic Songs" uploadState={updateUploadState} />
-      {copyLoading && <ActivityIndicator color={COLORS.white} />}
+    <View className="bg-black w-[100%] h-[100%]">
+      <Header title={t('app_name')} uploadState={updateUploadState} setToggleMenu={setToggleMenu} toggleMenu={toggleMenu} />
+      
       {/* Toast outside of ScrollView */}
       <View className="z-50" style={{zIndex:10000}}>
         <Toast />
       </View>
-
+      <Menu toggleMenu={toggleMenu} uploadState={updateUploadState} setToggleMenu={setToggleMenu} />
       {/* Main Scrollable Content */}
       <ScrollView className="flex-1 px-2" refreshControl={<RefreshControl onRefresh={()=>dispatch(SongCategory())}  refreshing={copyLoading}/>}>
         {/* Circular Progress */}
-        <CircularProgress songs_number={songCategories?.songs_number} />
+         {copyLoading && <ActivityIndicator color='white' />}
+        <CircularProgress songs_number={songCategories?.songs_number>999?`999+`:songCategories?.songs_number} />
 
         {/* Category List */}
         <View className="my-4 mt-8 flex-1">
@@ -252,10 +258,11 @@ const HomePage = () => {
       </ScrollView>
       <Modal
         className="flex-1"
-        animationType="fade"
+        animationType="slide"
         transparent
         onRequestClose={() => setUpload(false)}
         visible={upload}
+        
       >
         <View
           className="flex-1 "

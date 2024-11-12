@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "379536603244",
+    "project_id": "umuziki-gatorika",
+    "storage_bucket": "umuziki-gatorika.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:379536603244:android:68e3373ed65248ce680049",
+        "android_client_info": {
+          "package_name": "com.SailorPin.MusicSheets"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAOZraXutZsMo-BC0EZxPOoKiCejdE8CHM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

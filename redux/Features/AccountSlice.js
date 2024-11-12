@@ -19,12 +19,19 @@ const initialState = {
 export const Register = createAsyncThunk(
   "user/Register",
   async (userData, { rejectWithValue }) => {
+    // console.log(userData);
+    const formData=new FormData()
+    formData.append("username",userData.username)
+    formData.append("email",userData.email)
+    formData.append("password",userData.password)
+    formData.append("profile",userData.profile)
     const res = await fetch(`${Url}/account/Register`, {
       method: "POST",
-      body: JSON.stringify(userData),
+      body: formData,
       redirect: "follow",
       headers: {
         "Content-Type": "application/json",
+        "Content-Type":"multipart/form-data"
       },
     });
     if (!res.ok) {

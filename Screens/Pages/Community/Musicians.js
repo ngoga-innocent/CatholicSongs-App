@@ -15,6 +15,7 @@ import {
   FetchMusicianSkills,
   AddMusician
 } from "../../../redux/Features/MusicianSlice";
+import { useTranslation } from "react-i18next";
 import { FontAwesome } from "@expo/vector-icons";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Avatar } from "react-native-elements";
@@ -29,6 +30,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ActivityIndicator } from "react-native";
 import Toast from "react-native-toast-message";
 const Musicians = () => {
+  const { t } = useTranslation();
   const inset = useSafeAreaInsets();
   const dispatch = useDispatch();
   const [filter_key, setFilterKey] = useState("");
@@ -106,65 +108,72 @@ const Musicians = () => {
   };
   const skills = ["organist", "pianist", "conductor"];
   const handleJoinCommunity = async () => {
-    const token=await AsyncStorage.getItem("token")
-    if(!token){
-      navigation.navigate("Auth",{
-        screen:"Login"
-      })
-      return
+    const token = await AsyncStorage.getItem("token");
+    if (!token) {
+      navigation.navigate("Auth", {
+        screen: "Login"
+      });
+      return;
     }
     setShowJoinCommunity(!showJoinCommunity);
   };
   //Joining Community
-  const JoinCommunity=async()=>{
-    
+  const JoinCommunity = async () => {
     //console.log("Joining community", choosenSkills, localtion, description, phone_number)
-    const result = await dispatch(AddMusician({"skills":choosenSkills, "location":localtion, "description":description, "phone_number":phone_Number}));
-    if(AddMusician.rejected.match(result)){
+    const result = await dispatch(
+      AddMusician({
+        skills: choosenSkills,
+        location: localtion,
+        description: description,
+        phone_number: phone_Number
+      })
+    );
+    if (AddMusician.rejected.match(result)) {
       console.log("Failed to join community", result);
-      setShowJoinCommunity(false)
+      setShowJoinCommunity(false);
       Toast.show({
-        text1:result?.payload?.detail?.user?'Already Joined the community':result?.payload?.detail,
-        text2:"Please try again later or contact the Administrator",
-        type:"error",
-        autoHide:true
-      })
-      
-      return 
+        text1: result?.payload?.detail?.user
+          ? "Already Joined the community"
+          : result?.payload?.detail,
+        text2: "Please try again later or contact the Administrator",
+        type: "error",
+        autoHide: true
+      });
+
+      return;
     }
-    if(AddMusician.fulfilled.match(result)){
-      setShowJoinCommunity(false)
+    if (AddMusician.fulfilled.match(result)) {
+      setShowJoinCommunity(false);
       Toast.show({
-        text1:"You have successfully joined the community",
-        type:"success",
-        autoHide:true
-      })
-      dispatch(FetchMusician())
-      return
+        text1: "You have successfully joined the community",
+        type: "success",
+        autoHide: true
+      });
+      dispatch(FetchMusician());
+      return;
     }
-  }
+  };
   return (
     <ScrollView
       stickyHeaderIndices={[0]}
       className="relative bg-black px-2"
       contentContainerStyle={{ paddingBottom: height / 5, flexGrow: 10 }}
     >
-
       <View className="bg-black pt-14 pt-3 pb-2 mb-2">
-      <View className="z-50 w-full items-center justify-center">
+        <View className="z-50 w-full items-center justify-center">
           <Toast />
-          </View>
+        </View>
         <View
           style={{ paddingTop: inset.top }}
           className="mb-2 flex flex-row items-center justify-between"
         >
-         
-          <Text className="text-3xl  font-bold text-white">
-            Musicians Community
+          <Text className="text-xl  font-bold text-white">
+            {t("community")}
           </Text>
+          
           <TouchableOpacity
             onPress={handleJoinCommunity}
-            className="bg-white py-2 px-4 rounded-full items-center justify-center"
+            className="bg-white py-2 px-4 rounded-full flex flex-row gap-x-1 items-center justify-center"
           >
             <Text classsName="font-bold text-lg">Join</Text>
             <AntDesign name="rightcircle" size={24} color="black" />
@@ -178,19 +187,18 @@ const Musicians = () => {
             className="rotate-90"
           />
           <TextInput
-            className="flex-1 bg-transparent text-slate-200 py-3 w-[100%] self-end mr-3 rounded-md my-1 px-2"
-            placeholder="Search a musician"
+            className="flex-1 bg-transparent text-slate-200 py-1 w-[100%] self-end mr-3 rounded-md my-1 px-2"
+            placeholder={t("search_musician")}
             placeholderTextColor="white"
             value={filter_key}
             onChangeText={(e) => setFilterKey(e)}
           />
-          
-            <MaterialIcons name="filter-alt" size={24} color="white" />
-         
+
+          <MaterialIcons name="filter-alt" size={24} color="white" />
         </View>
 
         <View className="sticky top-2 flex flex-row justify-end gap-x-2 mx-3 items-center">
-          <Text className="text-white font-bold">filter by:</Text>
+          <Text className="text-white font-bold">{t("filter")}:</Text>
           {skills.map((item, index) => {
             return (
               <TouchableOpacity
@@ -210,9 +218,14 @@ const Musicians = () => {
           })}
         </View>
       </View>
-      
-      {musicianLoading && <ActivityIndicator color={COLORS.white} size={dimensions.width * 0.02} />}  
-      <View className="w-full flex flex-row flex-wrap  gap-2">
+
+      {musicianLoading && (
+        <ActivityIndicator
+          color={COLORS.white}
+          size={dimensions.width * 0.02}
+        />
+      )}
+      <View className="w-full flex flex-row flex-wrap  gap-2 my-2 mt-3">
         {filteredMusicians.length > 0 &&
           filteredMusicians.map((item, index) => {
             return (
@@ -223,7 +236,7 @@ const Musicians = () => {
                   })
                 }
                 key={index}
-                className="flex flex-row w-full  rounded-3xl p-1 items-center rounded-md items-center"
+                className="flex flex-row w-full border border-slate-800 rounded-3xl px-2 py-1 items-center rounded-md items-center"
               >
                 <Avatar
                   source={
@@ -232,7 +245,7 @@ const Musicians = () => {
                       : require("../../../assets/DefualtAvatar.jpg")
                   }
                   rounded
-                  size="large"
+                  size="medium"
                 />
                 <View className="flex flex-col flex-1 mx-2 ">
                   <View className="flex flex-row items-center justify-between ">
@@ -244,7 +257,7 @@ const Musicians = () => {
                     </Text>
                     <View className="flex flex-row items-center gap-x-2">
                       <View className="flex flex-row items-center justify-between">
-                        <Text className="  text-gray-200 font-bold">
+                        <Text className="  text-gray-500 font-bold">
                           Verified
                         </Text>
                         {item?.verified ? (
@@ -270,7 +283,10 @@ const Musicians = () => {
                           return (
                             <View key={skillindex}>
                               <Text className="text-gray-400">
-                                {skill.name},
+                                {skill.name}
+                                {skillindex === item?.skills_data?.length - 1
+                                  ? null
+                                  : ","}
                               </Text>
                             </View>
                           );
@@ -309,9 +325,14 @@ const Musicians = () => {
                 className="mb-4"
               >
                 <Text className="text-xl font-bold mb-4 self-start text-gray-400">
-                  Join Musician Community
+                  {t("join")}
                 </Text>
-                {musicianLoading && <ActivityIndicator color={COLORS.black} size={dimensions.width * 0.02} />} 
+                {musicianLoading && (
+                  <ActivityIndicator
+                    color={COLORS.black}
+                    size={dimensions.width * 0.02}
+                  />
+                )}
                 {/* Add your form, content, or other views here */}
                 <ScrollView
                   className="gap-y-2"
@@ -320,44 +341,51 @@ const Musicians = () => {
                   }}
                 >
                   <Text className=" mb-2 font-bold text-gray-500 text-lg">
-                    Choose Your Skills
+                    {t("skills")}
                   </Text>
-                  {musicianLoading?<ActivityIndicator color={COLORS.black} size={dimensions.width * 0.02} /> :<View className="flex flex-row flex-wrap w-[100%] items-center ">
-                    {musician_skills?.length > 0 &&
-                      musician_skills?.map((item, index) => {
-                        return (
-                          <TouchableOpacity
-                            onPress={() => {
-                              if (choosenSkills.includes(item.id)) {
-                                // If it is, remove it from the array
-                                setChoosenSkills(
-                                  choosenSkills.filter(
-                                    (skill) => skill !== item.id
-                                  )
-                                );
-                              } else {
-                                // If it's not, add it to the array
-                                setChoosenSkills([...choosenSkills, item.id]);
-                              }
-                            }}
-                            className={`${
-                              choosenSkills.includes(item.id)
-                                ? "bg-mygreen"
-                                : "bg-gray-400"
-                            }  py-2 px-3 mx-2 rounded-md`}
-                            key={index}
-                          >
-                            <Text>{item?.name}</Text>
-                          </TouchableOpacity>
-                        );
-                      })}
-                  </View>}
+                  {musicianLoading ? (
+                    <ActivityIndicator
+                      color={COLORS.black}
+                      size={dimensions.width * 0.02}
+                    />
+                  ) : (
+                    <View className="flex flex-row flex-wrap w-[100%] items-center ">
+                      {musician_skills?.length > 0 &&
+                        musician_skills?.map((item, index) => {
+                          return (
+                            <TouchableOpacity
+                              onPress={() => {
+                                if (choosenSkills.includes(item.id)) {
+                                  // If it is, remove it from the array
+                                  setChoosenSkills(
+                                    choosenSkills.filter(
+                                      (skill) => skill !== item.id
+                                    )
+                                  );
+                                } else {
+                                  // If it's not, add it to the array
+                                  setChoosenSkills([...choosenSkills, item.id]);
+                                }
+                              }}
+                              className={`${
+                                choosenSkills.includes(item.id)
+                                  ? "bg-mygreen"
+                                  : "bg-gray-400"
+                              }  py-2 px-3 mx-2 rounded-md`}
+                              key={index}
+                            >
+                              <Text>{item?.name}</Text>
+                            </TouchableOpacity>
+                          );
+                        })}
+                    </View>
+                  )}
                   <View
                     className="text-center"
                     style={{ width: dimensions.width * 0.85 }}
                   >
                     <Text className="text-lg font-bold text-gray-500">
-                      Where can we find you?
+                      {t("location")}
                     </Text>
                     <TextInput
                       value={localtion}
@@ -369,7 +397,7 @@ const Musicians = () => {
                   </View>
                   <View className="" style={{ width: dimensions.width * 0.85 }}>
                     <Text className="text-lg font-bold text-gray-500">
-                      Describe yourself
+                      {t("description")}
                     </Text>
                     <TextInput
                       value={description}
@@ -385,7 +413,7 @@ const Musicians = () => {
                   </View>
                   <View className="" style={{ width: dimensions.width * 0.85 }}>
                     <Text className="text-lg font-bold text-gray-500">
-                      How Can we contact you?
+                      {t("contact")}
                     </Text>
                     <TextInput
                       value={phone_Number}
@@ -394,13 +422,12 @@ const Musicians = () => {
                       className="w-[100%] border-gray-400 border rounded-md py-3 px-2"
                     />
                   </View>
-                  <TouchableOpacity onPress={()=>JoinCommunity()}
+                  <TouchableOpacity
+                    onPress={() => JoinCommunity()}
                     style={{ width: dimensions.width * 0.85 }}
                     className="flex-1  self-center items-center bg-primary py-4  rounded-lg"
                   >
-                    <Text className="text-white font-bold">
-                      Join Musician Community
-                    </Text>
+                    <Text className="text-white font-bold">{t("join")}</Text>
                   </TouchableOpacity>
                 </ScrollView>
               </View>

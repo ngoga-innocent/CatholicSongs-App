@@ -34,9 +34,11 @@ export default HeaderSongs = ({ title }) => {
     }
     if (SearchSong.rejected.match(result)) {
       return Toast.show({
-        text1: "Search Failed",
-        type: "error",
-        autoHide: true
+        text1: "No song Fond",
+        type: "info",
+        autoHide: true,
+        visibilityTime:8000,
+        position: "top"
       });
       // console.log("Search error",result.payload)
     }
@@ -73,20 +75,20 @@ export default HeaderSongs = ({ title }) => {
       className="flex z-50 flex-row items-center justify-between relative py-2 px-1  bg-black "
       style={{ paddingTop: inset.top }}
     >
-      {/* <View className="z-50">
+      <View className="z-50 w">
             <Toast />
-        </View> */}
+        </View>
       <Text className="text-white font-bold text-lg"> {} </Text>
-      <View className="flex-1 border px-3 mr-2 flex flex-row items-center justify-between border-white rounded-md">
+      <View className="flex-1 border px-3 mr-2 flex flex-row items-center justify-between border-white rounded-full">
         <TextInput
-          className="py-4 text-white "
-          placeholder={`${title?.name||'search a song or composer'}`}
-          placeholderTextColor={COLORS.white}
+          className="py-1 text-white "
+          placeholder={`${title?.name || ' search a song or composer'}`}
+          placeholderTextColor='gray'
           value={search}
           onChangeText={(e) => setSearch(e)}
         />
         <TouchableOpacity onPress={() => handleSearch()}>
-          <AntDesign name="search1" size={30} color={COLORS.white} />
+          <AntDesign name="search1" size={dimensions.big_icon*0.8} color={COLORS.white} />
         </TouchableOpacity>
       </View>
 

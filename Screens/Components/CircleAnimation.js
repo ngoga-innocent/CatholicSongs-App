@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ImageBackground } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import Animated, { Easing, useSharedValue, useAnimatedProps, withTiming } from 'react-native-reanimated';
 import { COLORS, dimensions } from './Global';
@@ -36,18 +36,19 @@ const CircularProgress = ({songs_number}) => {
   });
 
   return (
-    <View style={styles.container}>
+    <ImageBackground source={require('../../assets/violin.jpg')} style={styles.container}>
+      <View style={styles.overlay} />
       <Svg height="150" width="150" viewBox="0 0 120 120">
         {/* Background Circle */}
-        <Circle cx="60" cy="60" r="50" stroke="#e6e6e6" strokeWidth="10" fill="none" />
+        <Circle cx="60" cy="60" r="55" stroke="#e6e6e6" strokeWidth="10" fill="none" />
         {/* Progress Circle */}
         <AnimatedCircle
           cx="60"
           cy="60"
-          r="50"
+          r="55"
           stroke="#3498db"
           strokeWidth="10"
-          strokeDasharray={2 * Math.PI * 50}
+          strokeDasharray={2 * Math.PI * 55}
           animatedProps={animatedProps}
           fill="none"
         />
@@ -56,7 +57,7 @@ const CircularProgress = ({songs_number}) => {
       <View style={styles.textContainer}>
         <Text style={styles.counter}>{songs_number} songs</Text>
       </View>
-    </View>
+    </ImageBackground>
   );
 };
 
@@ -82,5 +83,10 @@ const styles = StyleSheet.create({
     fontSize: dimensions.width * 0.05,
     fontWeight: 'bold',
     color: COLORS.Primary, // Matches the circle color
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)', // Adjust opacity here
+    borderRadius: dimensions.width * 0.02, // Match the container border radius if needed
   },
 });

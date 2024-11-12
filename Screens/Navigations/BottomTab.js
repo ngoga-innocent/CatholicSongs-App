@@ -6,6 +6,7 @@ import { Dimensions, Platform, View, Text } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { Feather } from "@expo/vector-icons";
 import { MaterialIcons } from "@expo/vector-icons";
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { COLORS } from "../Components/Global";
 import HomePageNavigation from "./HomeNavigation";
 import CommunityStack from "./CommunityStack";
@@ -16,6 +17,7 @@ export default function BottomTab() {
   const height = Dimensions.get("screen").height;
   return (
     <Tab.Navigator
+    initialRouteName="Home"
       screenOptions={{
         tabBarShowLabel: false,
         tabBarHideOnKeyboard: true,
@@ -88,11 +90,8 @@ export default function BottomTab() {
           headerShown: false,
           tabBarIcon: ({ focused }) => (
             <View className={`${focused?'bg-white px-5 rounded-full':null} py-1 items-center justify-center`}>
-              <MaterialIcons
-                name="manage-accounts"
-                color={focused ? COLORS.black : COLORS.white}
-                size={30}
-              />
+             
+              <MaterialCommunityIcons name="account-music" size={30}  color={focused ? COLORS.black : COLORS.white} />
               {/* <Text
                 className="font-bold "
                 style={{ color: focused ? COLORS.purple : COLORS.black }}

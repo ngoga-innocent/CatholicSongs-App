@@ -18,16 +18,21 @@ import { useDispatch, useSelector } from "react-redux";
 import { AddNewEvent, FetchEvent, FetchTrendings } from "../../../redux/Features/EventSlice";
 import Toast from "react-native-toast-message";
 import { LinearGradient } from "expo-linear-gradient";
+import { FontAwesome6 } from "@expo/vector-icons";
 import { Video } from "expo-av";
 import * as Animatable from "react-native-animatable";
 import { WebView } from "react-native-webview";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as ImagePicker from "expo-image-picker"
 import { useIsFocused } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 const Archives = () => {
   const inset = useSafeAreaInsets();
   const dispatch = useDispatch();
   const isfocused=useIsFocused()
+  const navigation=useNavigation();
+  const {t}=useTranslation()
   const [location, setLocation] = useState({ x: null, y: null });
   const [showpopup, setShowPopup] = useState(false);
   const [showAddevent, setShowAddEvent] = useState(false);
@@ -39,7 +44,7 @@ const Archives = () => {
   const [eventThumbnail, setEventThumbnail] = useState([]);
   const CARD_WIDTH = dimensions.width * 0.98;
   const CARD_HEIGHT = dimensions.height * 0.32;
-  const SPACING = 5;
+  const SPACING = dimensions.width *0.02;
   const scrollX = useRef(new Animated.Value(0)).current;
   const scrollViewRef = useRef(null);
   const autoScrollInterval = useRef(null);
@@ -47,7 +52,7 @@ const Archives = () => {
 
   const CreateNewRepertoire = (e) => {
     const locate = e.nativeEvent;
-    console.log(locate);
+    // console.log(locate);
     setLocation({ x: locate.locationX, y: locate.pageY });
     setShowPopup(!showpopup);
     // navigation.navigate('CreateNewRepertoire');
@@ -152,13 +157,17 @@ const Archives = () => {
         "thumbnail":eventThumbnail
       }))
       if(AddNewEvent.fulfilled.match(result)){
+        setShowAddEvent(false)
         Toast.show({
           text1:"Successfully added event",
           type:"success",
           autoHide:true
         })
+        FetchEvents();
+
       }
       if(AddNewEvent.rejected.match(result)){
+        setShowAddEvent(false)
         Toast.show({
           text1:"Failed To add event",
           text2:result.payload.details,
@@ -170,11 +179,18 @@ const Archives = () => {
   return (
     <ScrollView className="bg-black flex-1 relative" stickyHeaderIndices={[0]}>
       <View
-        className=" flex flex-row justify-between bg-black z-50 items-center text-center  px-2"
-        style={{ paddingTop: inset.top }}
+        className="bg-black z-50 flex flex-row justify-between bg-black z-50 items-center text-center  px-2"
+        style={{ paddingTop: inset.top,zIndex:50 }}
       >
+          <TouchableOpacity onPress={() => navigation.navigate("Home")}>
+          <FontAwesome6
+            name="circle-chevron-left"
+            size={35}
+            color={COLORS.white}
+          />
+        </TouchableOpacity>
         <Text className="text-white font-bold text-xl text-center">
-          Featured Events
+          {t('event')}
         </Text>
         <TouchableOpacity onPress={(e) => CreateNewRepertoire(e)}>
           <Octicons name="plus-circle" size={40} color={COLORS.white} />
@@ -207,6 +223,7 @@ const Archives = () => {
           </View>
         )}
       </View>
+      {eventLoading && <ActivityIndicator color='white' collapsable/>}
       <View className="my-3">
         <Text>Events</Text>
         {events?.length < 1 ? (
@@ -216,11 +233,14 @@ const Archives = () => {
             ref={scrollViewRef}
             horizontal
             showsHorizontalScrollIndicator={false}
-            snapToInterval={CARD_WIDTH + SPACING} // for snapping to the nearest card
+            pagingEnabled
+            snapToInterval={CARD_WIDTH } // for snapping to the nearest card
             decelerationRate="normal"
             contentContainerStyle={{
               alignItems: "center",
-              justifyContent: "center"
+              justifyContent: "center",
+              alignSelf:"center",
+              paddingHorizontal: (dimensions.width - CARD_WIDTH) / 2,
             }}
             onScroll={Animated.event(
               [{ nativeEvent: { contentOffset: { x: scrollX } } }],
@@ -251,6 +271,11 @@ const Archives = () => {
                   }}
                   className="rounded-lg flex flex-col relative "
                 >
+                  <TouchableOpacity onPress={()=>navigation.navigate('single_event',{
+                    event:item
+                  })} className="flex-1 h-[100%] border border-slate-700 " style={{position: "absolute",
+                      borderRadius: dimensions.width * 0.03,width: "100%",
+                      height: "100%"}}>
                   <Image
                     source={{ uri: item.thumbnail }}
                     style={{
@@ -261,7 +286,7 @@ const Archives = () => {
                     }}
                   />
                   <LinearGradient
-                    colors={["rgba(0,0,0,0.7)", "transparent"]}
+                    colors={["rgba(0,255,255,0.4)", "transparent"]}
                     style={{
                       position: "absolute",
                       width: "100%",
@@ -296,6 +321,7 @@ const Archives = () => {
                       </Text>
                     </View>
                   </View>
+                  </TouchableOpacity>
                 </Animated.View>
               );
             })}
@@ -317,39 +343,47 @@ const Archives = () => {
         })}
       </View>
       <View>
-        <Text className="text-white text-xl font-bold my-4">
-          Released Songs
+        <Text className="text-white text-xl font-bold my-4 mx-4">
+          {t('Miss')}
         </Text>
         {trendings?.length < 1 ? (
           <Text>No Trending Songs</Text>
         ) : (
           <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 10 }}
-          >
-            {trendings?.map((item, index) => {
-              return (
-                <TouchableOpacity
-                  key={index}
-                  style={{
-                    width: dimensions.width * 0.9,
-                    height: dimensions.height * 0.3,
-                    marginHorizontal: 10,
-                    borderRadius: 10,
-                    overflow: "hidden"
-                  }}
-                >
-                  <WebView
-                    style={{ flex: 1 }}
-                    javaScriptEnabled={true}
-                    source={{ uri: item?.link }} // Embed YouTube video
-                    allowsFullscreenVideo={false} // Allow fullscreen mode
-                    startInLoadingState={true} // Show loading state
-                  />
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 10 }}
+        >
+          {trendings?.map((item, index) => {
+            // Extract YouTube video ID and format the embed link
+            const videoId = item?.link.split("youtu.be/")[1] || item?.link.split("v=")[1]?.split("&")[0];
+            const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=0&controls=1`;
+        
+            return (
+              <TouchableOpacity
+              className="border border-slate-700 rounded-lg"
+                key={index}
+                style={{
+                  width: dimensions.width * 0.9,
+                  height: dimensions.height * 0.3,
+                  marginVertical: 10,
+                  borderRadius: 10,
+                  overflow: "hidden",
+                }}
+              >
+                <WebView
+                  style={{ flex: 1 }}
+                  javaScriptEnabled={true}
+                  source={{ uri: embedUrl }}
+                  allowsFullscreenVideo={true}
+                  startInLoadingState={true}
+                  mediaPlaybackRequiresUserAction={true} // Prevent autoplay
+                  nestedScrollEnabled={true} // Enable smooth scrolling
+                />
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+        
         )}
       </View>
       <Modal
@@ -389,10 +423,11 @@ const Archives = () => {
                 )}
                 {/* Add your form, content, or other views here */}
                 <ScrollView
-                  className="gap-y-2"
+                  className="gap-y-2 py-12 "
                   contentContainerStyle={{
                     alignItems: "start"
                   }}
+                  showsVerticalScrollIndicator={false}
                 >
                   <View
                     className="text-center"
@@ -449,12 +484,13 @@ const Archives = () => {
                         className="px-5 py-3 bg-gray-300 rounded-md"
                       >
                         <Text>
-                          {eventDate.toLocaleDateString() || `Choose Date`}
+                          {/* {eventDate.toDateString() || `Choose Date`} */}
+                          {eventDate.toLocaleString() || `Choose Date`}
                         </Text>
                       </TouchableOpacity>
                       {showCalendar && (
                         <DateTimePicker
-                          mode="date"
+                          mode="datetime"
                           display="default"
                           value={eventDate}
                           onChange={onChange}
