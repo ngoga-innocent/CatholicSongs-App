@@ -20,18 +20,19 @@ export const Register = createAsyncThunk(
   "user/Register",
   async (userData, { rejectWithValue }) => {
     // console.log(userData);
-    const formData=new FormData()
-    formData.append("username",userData.username)
-    formData.append("email",userData.email)
-    formData.append("password",userData.password)
-    formData.append("profile",userData.profile)
+    const formData = new FormData();
+    formData.append("username", userData?.username);
+    formData.append("email", userData?.email);
+    formData.append("password", userData?.password);
+    formData.append("phone_number",userData?.phone_number)
+    userData?.profile &&formData.append("profile", userData.profile);
     const res = await fetch(`${Url}/account/Register`, {
       method: "POST",
       body: formData,
       redirect: "follow",
       headers: {
         "Content-Type": "application/json",
-        "Content-Type":"multipart/form-data"
+        "Content-Type": "multipart/form-data",
       },
     });
     if (!res.ok) {
@@ -74,12 +75,33 @@ export const LoginFunction = createAsyncThunk(
     return final;
   }
 );
+export const verifyToken = createAsyncThunk(
+  "Account/verifyToken",
+  async (_, { rejectWithValue }) => {
+    const token = await AsyncStorage.getItem("token");
+    if (!token) return;
+    const myHeaders = new Headers();
+    myHeaders.append("Authorization", `Token ${token}`);
+    const requestOptions = {
+      method: "GET",
+      headers: myHeaders,
+      redirect: "follow",
+    };
+    const response = await fetch(
+      `${Url}/account/TokenVerification`,
+      requestOptions
+    );
+    const result = await response.json();
+    if (!response.ok){
+      return rejectWithValue(result?.detail || "Failed to verify the token");
+    }
+    return result;
+  }
+);
 export const setToken = createAction("account/setToken", (token) => ({
   payload: token,
 }));
-export const Logout = createAction("account/logout", async () => {
-  await AsyncStorage.removeItem("token");
-});
+export const Logout = createAction("account/logout");
 const AccountSlice = createSlice(
   {
     name: "Account",
@@ -114,7 +136,7 @@ const AccountSlice = createSlice(
         state.isError = true;
         state.message = action.payload.message;
         state.isLoading = false;
-        console.log(action.payload);
+        // console.log(action.payload);
       });
       builder.addCase(setToken, (state, action) => {
         state.token = action.payload;
@@ -122,7 +144,15 @@ const AccountSlice = createSlice(
       builder.addCase(Logout, (state) => {
         state.isLogged = false;
         state.token = "";
+        state.User = null;
       });
+      builder.addCase(verifyToken.pending,(state)=>{
+        console.log("pending Token Verification")
+      }).addCase(verifyToken.fulfilled,(state,action)=>{
+        console.log("Token Veriication payload",action)
+      }).addCase(verifyToken.rejected,(state,action)=>{
+        console.log(action.payload)
+      })
     },
   }
   // reducers: {

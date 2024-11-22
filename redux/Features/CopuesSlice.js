@@ -32,11 +32,8 @@ export const UploadSong = createAsyncThunk(
     formData.append("category", kwargs?.chooseCategory?.id);
 
     // Append the PDF document
-    formData.append("document", {
-      name: kwargs?.selectedPdf?.name,
-      uri: kwargs?.selectedPdf?.uri,
-      type: "application/pdf"
-    });
+    formData.append("document", kwargs?.document)
+    
 
     const myHeaders = new Headers();
     myHeaders.append("Authorization", `Token ${token}`);  // Only append Authorization header

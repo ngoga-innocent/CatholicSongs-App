@@ -97,6 +97,7 @@ export default Header = ({ title, uploadState, setToggleMenu,toggleMenu }) => {
             placeholderTextColor="gray"
             value={search}
             onChangeText={(e) => setSearch(e)}
+            onEndEditing={()=>handleSearch()}
           />
           <TouchableOpacity className="mx-2" onPress={() => handleSearch()}>
             <AntDesign name="search1" size={25} color={COLORS.white} />

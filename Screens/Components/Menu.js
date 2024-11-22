@@ -18,14 +18,18 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { useTranslation } from "react-i18next";
-import { useSelector } from "react-redux";
+import { useSelector,useDispatch } from "react-redux";
+import { Logout } from "../../redux/Features/AccountSlice";
 const Menu = ({ toggleMenu,uploadState, setToggleMenu }) => {
   const { t, i18n } = useTranslation();
   const [userData, setUserData] = useState(null);
   const [upload, setUpload] = useState(false);
   const navigation = useNavigation();
+  const dispatch=useDispatch()
   const inset = useSafeAreaInsets();
+  const {User} =useSelector(state=>state.Account)
   const [isLanguageModalVisible, setLanguageModalVisible] = useState(false);
+  console.log(User)
   useEffect(() => {
     getUserData();
   }, []);
@@ -71,6 +75,8 @@ const Menu = ({ toggleMenu,uploadState, setToggleMenu }) => {
     try {
       await AsyncStorage.removeItem("token");
       await AsyncStorage.removeItem("userData");
+      const result = dispatch(Logout())
+      // console.log(result)
       setToggleMenu(false);
       navigation.navigate("Auth", { screen: "Login" });
     } catch (error) {
@@ -91,25 +97,33 @@ const handleUploadState = async () => {
   setToggleMenu(false);
 };
   return (
+   
     <Modal
       animationType="slide"
       transparent
       visible={toggleMenu}
       onRequestClose={() => setToggleMenu(false)}
     >
-      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.6)" }}>
-        <TouchableWithoutFeedback onPress={() => setToggleMenu(false)}>
+      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.6)"}}>
+        <TouchableWithoutFeedback onPress={() => {
+          setToggleMenu(false);
+          
+          }}  accessible={false}>
           <View style={{ flex: 1 }}>
-            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+            <TouchableWithoutFeedback >
               <View
                 style={{
                   marginTop: inset.top,
                   padding: 20,
                   backgroundColor: "white",
-                  width: "75%",
-                  height: "100%",
+                  width: dimensions.width*0.75,
+                  height: dimensions.height * 0.93,
                   borderTopRightRadius: 20,
-                  borderBottomRightRadius: 20
+                  borderBottomRightRadius: 20,
+                  display:"flex",
+                  flexDirection:"column",
+                  justifyContent:'space-between'
+                  
                 }}
               >
                 <View className="flex flex-col">
@@ -131,7 +145,7 @@ const handleUploadState = async () => {
                       }}
                       size="large"
                       source={
-                        userData?.profile
+                        User?.user?.profile
                           ? { uri: userData.profile }
                           : require("../../assets/icon.png")
                       }
@@ -140,10 +154,12 @@ const handleUploadState = async () => {
                       className="font-bold text-xl"
                       style={{ marginLeft: 10 }}
                     >
-                      {userData?.username || "Guest"}
+                      {User?.user?.username || "Guest"}
                     </Text>
                   </View>
-                  <TouchableOpacity className="flex flex-row items-center px-2 justify-between bg-gray-600 rounded-full my-2 py-1" onPress={() => handleUploadState()}>
+                  <TouchableOpacity className="flex flex-row items-center px-2 justify-between bg-gray-600 rounded-full my-2 py-1" onPress={() => {
+                   
+                    handleUploadState();}}>
                     <View className="flex flex-row items-center gap-x-2">
                     <MaterialIcons
                       name="playlist-add-circle"
@@ -196,7 +212,7 @@ const handleUploadState = async () => {
                   style={{
                     marginTop: 20,
                     padding: 10,
-                    backgroundColor: "orange solid",
+                    backgroundColor: "orange",
                     borderRadius: 5
                   }}
                   onPress={handleLogout}
@@ -206,7 +222,7 @@ const handleUploadState = async () => {
                     className="font-bold"
                     style={{ color: "white", textAlign: "center" }}
                   >
-                    Logout
+                   {User?.user?.username?'Logout':'Login'}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -251,6 +267,7 @@ const handleUploadState = async () => {
       </Modal>
     </Modal>
 
+   
     //Change Language Modal
   );
 };

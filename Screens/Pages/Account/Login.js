@@ -35,6 +35,7 @@ const Login = () => {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
   const [profileImage, setProfileImage] = useState(null);
+  const [phoneNumber,setPhoneNumber]=useState("")
   // useEffect(() => {
   //     setIsLoggedIn(isLogged)
   //     if (isLogged) {
@@ -70,7 +71,9 @@ const Login = () => {
     }
   };
   const RegisterSubmit = async () => {
-    const userData = { username: name, email: email, password: password,profile: profileImage};
+    const userData = { username: name, email: email, password: password,phone_number:phoneNumber};
+    if(profileImage) userData={...userData,...{profile: profileImage}}
+    
     if(password !=confirmPassword) return Alert.alert("password Does not match")
     const result=await dispatch(Register(userData));
 if(Register.fulfilled.match(result)){
@@ -104,7 +107,7 @@ if(Register.fulfilled.match(result)){
         const jsonData=JSON.stringify(result.payload.user)
         const token=JSON.stringify(result.payload.token)
         await AsyncStorage.setItem("userData", jsonData);
-        await AsyncStorage.setItem("token", token);
+        await AsyncStorage.setItem("token", result?.payload?.token);
         navigation.navigate("Tab")
       }
       else if (LoginFunction.rejected.match(result)) {
@@ -183,7 +186,7 @@ if(Register.fulfilled.match(result)){
                   value={name}
                   onChangeText={(e) => setName(e)}
                   className={`bg-white my-1 px-2 w-[90%]  py-2 rounded-md text-black font-semibold`}
-                  placeholder="Username"
+                  placeholder="Username/phone Number"
                 />
                 <TextInput
                   value={password}
@@ -225,12 +228,20 @@ if(Register.fulfilled.match(result)){
                     <Avatar size="large" rounded icon={{ name: "photo" }} />
                   )}
                 </TouchableOpacity>
+                <Text className="font-bold">Profile Picture</Text>
                 <TextInput
                   value={name}
                   onChangeText={(e) => setName(e)}
                   className={`bg-white my-1 px-2 w-[90%]  py-2 rounded-lg text-black font-semibold`}
                   placeholder="Username"
                   autoFocus={true}
+                />
+                <TextInput
+                  value={phoneNumber}
+                  onChangeText={(e) => setPhoneNumber(e)}
+                  className={`bg-white my-1 px-2 w-[90%]  py-2 rounded-lg text-black font-semibold`}
+                  placeholder="078221436..."
+                  
                 />
                 <TextInput
                   value={email}

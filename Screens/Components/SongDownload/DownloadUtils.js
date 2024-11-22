@@ -27,15 +27,23 @@ export const viewPdf = async (pdfUrl) => {
 };
 
 // Function to download PDF
-export const downloadPdf = async (pdfUrl, name, composer, setDownloadProgress, setFileUri) => {
-  console.log(pdfUrl);
-  setIsDownloading(true);
-  const fileName = `${name}~${composer}.pdf`;
-  const fileUri = FileSystem.documentDirectory + fileName;
-
+export const downloadPdf = async (pdfUrl, name, composer, setDownloadProgress, setFileUri, setIsDownloading) => {
   try {
+    console.log("Original PDF URL:", pdfUrl);
+
+    // Encode the URL to handle special characters
+    const encodedUrl = encodeURI(pdfUrl);
+    console.log("Encoded PDF URL:", encodedUrl);
+
+    setDownloadProgress(0); // Reset progress
+    setIsDownloading(true);
+
+    const fileName = `${name}~${composer}.pdf`;
+    const fileUri = FileSystem.documentDirectory + fileName;
+
+    // Download the file using expo-file-system
     const downloadResumable = FileSystem.createDownloadResumable(
-      pdfUrl,
+      encodedUrl,
       fileUri,
       {},
       (downloadProgress) => {
@@ -45,34 +53,52 @@ export const downloadPdf = async (pdfUrl, name, composer, setDownloadProgress, s
     );
 
     const { uri } = await downloadResumable.downloadAsync();
-    setFileUri((prevUris) => [...prevUris, uri]);
-    Alert.alert("Download complete!", "The file has been downloaded successfully.");
+
+    console.log("Downloaded file URI:", uri);
+    setFileUri((prevUris = []) => [...prevUris, uri]);
+
+    // Alert.alert("Download Complete", "The file has been downloaded successfully.");
     setIsDownloading(false);
-    // Optional: Share the downloaded PDF
+
+    // Share the file (optional)
     if (await Sharing.isAvailableAsync()) {
       await Sharing.shareAsync(uri);
     }
   } catch (error) {
     console.error("Error downloading file:", error);
     Alert.alert("Error", "Failed to download the PDF.");
+    setIsDownloading(false);
   }
 };
 
 // Function to download and save PDF to media library
 export const downloadAndSavePdf = async (pdfUrl, name, composer, setDownloadProgress, setIsDownloading) => {
-  // Request storage permission
-  const { status } = await MediaLibrary.requestPermissionsAsync();
-  if (status !== "granted") {
-    Alert.alert("Permission required", "Permission to access storage is required to save files.");
+  console.log("download",pdfUrl)
+  if (!pdfUrl || typeof pdfUrl !== "string") {
+    Alert.alert("Invalid URL", "The provided URL is not a valid PDF.");
     return;
   }
 
-  setIsDownloading(true);
-  const fileName = `${name}_${composer}.pdf`; // Ensure the file has a .pdf extension
+  const { status } = await MediaLibrary.requestPermissionsAsync();
+  if (status !== "granted") {
+    Alert.alert(
+      "Permission Required",
+      "Storage permission is needed to save files. Please enable it in your app settings.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Open Settings", onPress: () => Linking.openSettings() },
+      ]
+    );
+    return;
+  }
+
+  const fileName = `${name}_${composer}.pdf`;
   const cacheUri = FileSystem.cacheDirectory + fileName;
 
   try {
-    // Step 1: Download PDF to cache
+    setIsDownloading(true);
+
+    // Download file
     const downloadResumable = FileSystem.createDownloadResumable(
       pdfUrl,
       cacheUri,
@@ -82,53 +108,31 @@ export const downloadAndSavePdf = async (pdfUrl, name, composer, setDownloadProg
         setDownloadProgress(Math.floor(progress * 100));
       }
     );
-
     const { uri: cachedUri } = await downloadResumable.downloadAsync();
+
     console.log("File downloaded to cache:", cachedUri);
     setIsDownloading(false);
 
-    if (Platform.OS === 'android') {
-      // Step 2: Request permission to access external storage using StorageAccessFramework
+    if (Platform.OS === "android") {
       const permission = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
-      if (permission.status !== 'granted') {
-        Alert.alert('Permission required', 'Permission to access external storage is required to save files.');
+      if (permission.status !== "granted") {
+        Alert.alert("Permission Denied", "File saved to app storage.");
         return;
       }
 
-      // Step 3: Copy the file to the selected directory
       const directoryUri = permission.directoryUri;
+      const targetUri = await FileSystem.StorageAccessFramework.createFileAsync(directoryUri, fileName, "application/pdf");
+      const fileContent = await FileSystem.readAsStringAsync(cachedUri, { encoding: FileSystem.EncodingType.Base64 });
+      await FileSystem.writeAsStringAsync(targetUri, fileContent, { encoding: FileSystem.EncodingType.Base64 });
 
-      try {
-        // Create a new file in the selected directory
-        const targetUri = await FileSystem.StorageAccessFramework.createFileAsync(
-          directoryUri,
-          fileName,
-          "application/pdf"
-        );
-
-        // Copy content from cacheUri to targetUri
-        const fileContent = await FileSystem.readAsStringAsync(
-          cachedUri,
-          { encoding: FileSystem.EncodingType.Base64 }
-        );
-        await FileSystem.writeAsStringAsync(
-          targetUri,
-          fileContent,
-          { encoding: FileSystem.EncodingType.Base64 }
-        );
-
-        Alert.alert("Success", "The file has been saved to the selected directory.");
-      } catch (error) {
-        console.error("Error saving file to external storage:", error);
-        Alert.alert("Error", "Could not save the file to external storage.");
-      }
+      Alert.alert("Success", "The file has been saved.");
     } else {
-      // iOS: Use the Sharing module to allow user to save or share the file
       await Sharing.shareAsync(cachedUri);
+      await FileSystem.deleteAsync(cachedUri, { idempotent: true });
     }
   } catch (error) {
-    console.error("Error downloading or saving file:", error);
-    Alert.alert("Error", "Failed to save the PDF file. Please try again.");
+    console.error("Error:", error);
+    Alert.alert("Error", "Failed to save the file.");
     setIsDownloading(false);
   }
 };

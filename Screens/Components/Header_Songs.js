@@ -17,11 +17,13 @@ import { COLORS, dimensions } from "./Global";
 import { useDispatch,useSelector } from "react-redux";
 import { FetchCopiesType, GetSong, SearchSong } from "../../redux/Features/CopuesSlice";
 import Toast from "react-native-toast-message";
-export default HeaderSongs = ({ title }) => {
+import { useNavigation } from "@react-navigation/native";
+export default HeaderSongs = ( {title} ) => {
   const inset = useSafeAreaInsets();
   const [search, setSearch] = useState("");
   const [location,setLocation]=useState({"x":null,"y":null})
   const [sort,setSort]=useState(false)
+  const navigation=useNavigation()
   const dispatch = useDispatch();
   const {copiesType}=useSelector(state=>state.Copies)
   
@@ -72,13 +74,17 @@ export default HeaderSongs = ({ title }) => {
   }
   return (
     <View
-      className="flex z-50 flex-row items-center justify-between relative py-2 px-1  bg-black "
+      className=" z-50 flex-col relative py-2 px-1  bg-black "
       style={{ paddingTop: inset.top }}
     >
       <View className="z-50 w">
             <Toast />
         </View>
-      <Text className="text-white font-bold text-lg"> {} </Text>
+      
+      <View className="flex flex-row gap-x-2 mt-2 mb-7">
+        <TouchableOpacity onPress={()=>navigation.goBack()} className="p-2 rounded-full bg-slate-400">
+        <Entypo name="chevron-left" size={24} color="white" />
+        </TouchableOpacity>
       <View className="flex-1 border px-3 mr-2 flex flex-row items-center justify-between border-white rounded-full">
         <TextInput
           className="py-1 text-white "
@@ -110,6 +116,8 @@ export default HeaderSongs = ({ title }) => {
         })}
         </ScrollView>
       </View>}
+      </View>
+      <Text className="text-white font-bold text-2xl"> {title?.name || 'Search Result'} </Text>
     </View>
   );
 };
