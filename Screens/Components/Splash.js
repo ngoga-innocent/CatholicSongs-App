@@ -5,10 +5,11 @@ import { useNavigation } from "@react-navigation/native";
 import { useSelector } from "react-redux";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { dimensions } from "./Global";
+import { useTranslation } from "react-i18next";
 const Splash = () => {
   const navigation = useNavigation();
   // const token = useSelector(state => state.Account.token)
-
+  const {t}=useTranslation();
   const onAnimationEnd = async () => {
     const token = await AsyncStorage.getItem("token");
     const installed = await AsyncStorage.getItem("installed");
@@ -42,7 +43,7 @@ const Splash = () => {
         animation="fadeInUpBig"
         duration={5000}
       >
-        Catholic Music
+        {t('app_name')}
       </Animatable.Text>
     </View>
   );

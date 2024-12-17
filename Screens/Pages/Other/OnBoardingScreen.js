@@ -1,15 +1,15 @@
-import React, { useState, useRef,useEffect } from "react";
-import { View, Text, ScrollView, ImageBackground, TouchableOpacity } from "react-native";
-import { dimensions } from "../../Components/Global";
-import { Image } from "react-native";
+import React, { useState, useRef, useEffect } from "react";
+import { View, Text, ScrollView, ImageBackground, TouchableOpacity, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { dimensions } from "../../Components/Global";
 import { registerForPushNotificationsAsync } from "../../Components/Push";
 
 const OnBoardingScreen = () => {
-  useEffect(()=>{
-    registerForPushNotificationsAsync()
-  },[])
+  useEffect(() => {
+    registerForPushNotificationsAsync();
+  }, []);
+
   const scrollRef = useRef();
   const navigation = useNavigation();
   const [activeIndex, setActiveIndex] = useState(0);
@@ -17,116 +17,123 @@ const OnBoardingScreen = () => {
   const ImageScreen = [
     {
       image: require("../../../assets/saintfamille.jpg"),
-      text: "Welcome to Umuziki Gatolika, the home of Catholic music in Rwanda"
+      text: "Welcome to Umuziki Gatolika, the home of Catholic music in Rwanda",
     },
     { image: require("../../../assets/pianist.jpg"), text: "Discover Music" },
     { image: require("../../../assets/violin.jpg"), text: "Learn and Sing Along" },
-    { image: require("../../../assets/music_sheets.jpg"), text: "A personal library of music sheets, hymns, and psalms." }
+    { image: require("../../../assets/music_sheets.jpg"), text: "A personal library of music sheets, hymns, and psalms." },
   ];
 
   const handleNext = async () => {
     if (activeIndex === ImageScreen.length - 1) {
-      await AsyncStorage.setItem('installed', 'true');
+      await AsyncStorage.setItem("installed", "true");
       navigation.navigate("Tab");
     } else {
-      setActiveIndex(activeIndex + 1);
-      scrollRef.current.scrollTo({ x: dimensions.width * (activeIndex + 1), animated: true });
+      const nextIndex = activeIndex + 1;
+      setActiveIndex(nextIndex);
+      scrollRef.current.scrollTo({ x: dimensions.width * nextIndex, animated: true });
     }
   };
 
   const handlePrevious = () => {
     if (activeIndex > 0) {
-      setActiveIndex(activeIndex - 1);
-      scrollRef.current.scrollTo({ x: dimensions.width * (activeIndex - 1), animated: true });
+      const prevIndex = activeIndex - 1;
+      setActiveIndex(prevIndex);
+      scrollRef.current.scrollTo({ x: dimensions.width * prevIndex, animated: true });
     }
   };
 
+  const onScrollEnd = (e) => {
+    const scrollPosition = e.nativeEvent.contentOffset.x;
+    const index = Math.round(scrollPosition / dimensions.width);
+    setActiveIndex(index);
+  };
+
   return (
-    <View className="flex-1">
+    <View style={{ flex: 1 }}>
       <ScrollView
         horizontal
         ref={scrollRef}
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         style={{ flex: 1 }}
-        onScroll={(e) => {
-          const scrollPosition = e.nativeEvent.contentOffset.x;
-          const index = Math.floor(scrollPosition / dimensions.width);
-          setActiveIndex(index);
-        }}
-        scrollEventThrottle={16}
+        onMomentumScrollEnd={onScrollEnd}
       >
         {ImageScreen.map((item, index) => (
           <View
-            className="flex-1 flex flex-col items-center justify-center"
             key={index}
             style={{
               flex: 1,
               width: dimensions.width,
-              height: dimensions.height
+              height: dimensions.height,
+              justifyContent: "center",
+              alignItems: "center",
             }}
           >
             <ImageBackground
               source={item.image}
               style={{
                 position: "absolute",
-                flex: 1,
                 width: dimensions.width,
                 height: dimensions.height,
-                opacity: 0.04
+                opacity: 0.04,
               }}
-              className="flex flex-col justify-end py-9 px-3 flex-wrap"
             />
             <Image
               source={item.image}
-              className="object-cover rounded-2xl"
               style={{
                 width: dimensions.width * 0.9,
-                height: dimensions.height * 0.6
+                height: dimensions.height * 0.6,
+                borderRadius: 15,
               }}
             />
-            <Text className="font-bold text-2xl my-2">{item.text}</Text>
+            <Text style={{ fontSize: 20, fontWeight: "bold", marginTop: dimensions.height *0.02,width:'90%',marginHorizontal:"auto",textAlign:"center" }}>{item.text}</Text>
           </View>
         ))}
       </ScrollView>
 
-      <View className="flex-row justify-between px-5 pb-5">
+      <View style={{ flexDirection: "row", justifyContent: "space-between", padding: 20 }}>
         <TouchableOpacity
-          className="py-2 px-3 rounded-full"
           onPress={handlePrevious}
           disabled={activeIndex === 0}
           style={{
+            padding: dimensions.width * 0.027,
+            paddingHorizontal: dimensions.width * 0.06,
+            backgroundColor: activeIndex === 0 ? "gray" : "blue",
+            borderRadius: 20,
             opacity: activeIndex === 0 ? 0.5 : 1,
-            backgroundColor: "rgba(0,0,0,0.7)"
           }}
         >
-          <Text className="text-white font-bold text-lg">Previous</Text>
+          <Text style={{ color: "white", fontWeight: "bold" }}>Previous</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          className="py-2 px-6 rounded-full"
           onPress={handleNext}
-          disabled={activeIndex === ImageScreen.length }
           style={{
-            opacity: activeIndex === ImageScreen.length - 1 ? 0.5 : 1,
-            backgroundColor: "rgba(0,0,0,0.7)"
+            padding: dimensions.width * 0.027,
+            paddingHorizontal: dimensions.width * 0.06,
+            backgroundColor: activeIndex === ImageScreen.length - 1 ? "green" : "blue",
+            borderRadius: 20,
+            opacity: 1,
           }}
         >
-          <Text className="text-white font-bold text-lg">
-            {activeIndex === ImageScreen.length - 1 ? "Finish" : "Next"}
+          <Text style={{ color: "white", fontWeight: "bold" }}>
+            {activeIndex === ImageScreen.length - 1 ? "Get started" : "Next"}
           </Text>
         </TouchableOpacity>
       </View>
 
-      <View className="flex-row justify-between items-center py-2 px-3 absolute bottom-4 self-center">
+      <View style={{ flexDirection: "row", justifyContent: "center", marginBottom: 20,alignItems:'center' }}>
         {ImageScreen.map((_, index) => (
           <View
             key={index}
-            className={`border border-white p-2 h-2 w-2 rounded-full ${
-              index === activeIndex
-                ? "border-2 border-blue-500 bg-blue-500 w-14"
-                : "border-2 bg-gray-400 border-gray-300"
-            }`}
+            style={{
+              width: index === activeIndex ? dimensions.width * 0.09 : 10,
+              height: index === activeIndex ? dimensions.width * 0.029 : 10,
+              borderRadius: 5,
+              backgroundColor: index === activeIndex ? "blue" : "gray",
+              marginHorizontal: 5,
+            }}
           />
         ))}
       </View>

@@ -17,19 +17,24 @@ import Entypo from "@expo/vector-icons/Entypo";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import AntDesign from "@expo/vector-icons/AntDesign";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import { useTranslation } from "react-i18next";
-import { useSelector,useDispatch } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { Logout } from "../../redux/Features/AccountSlice";
-const Menu = ({ toggleMenu,uploadState, setToggleMenu }) => {
+import ContactUsModal from "./ContactUsModal";
+import SupportModal from "./SongDownload/SupportModal";
+const Menu = ({ toggleMenu, uploadState, setToggleMenu }) => {
   const { t, i18n } = useTranslation();
   const [userData, setUserData] = useState(null);
   const [upload, setUpload] = useState(false);
+  const [contact_visible,setContact_visible]=useState(false);
+  const [support_visible,setSupportVisible]=useState(false);
   const navigation = useNavigation();
-  const dispatch=useDispatch()
+  const dispatch = useDispatch();
   const inset = useSafeAreaInsets();
-  const {User} =useSelector(state=>state.Account)
+  const { User } = useSelector((state) => state.Account);
   const [isLanguageModalVisible, setLanguageModalVisible] = useState(false);
-  console.log(User)
+  console.log(User);
   useEffect(() => {
     getUserData();
   }, []);
@@ -51,12 +56,14 @@ const Menu = ({ toggleMenu,uploadState, setToggleMenu }) => {
   const changeLanguage = async (lang) => {
     try {
       await i18n.changeLanguage(lang);
-      await AsyncStorage.setItem("user-language", lang);
+      await AsyncStorage.setItem("language", lang);
       setLanguageModalVisible(false);
     } catch (error) {
       console.error("Error changing language:", error);
     }
   };
+  //Trigger Push notification
+
   //Fecth Notification
   const FetchNotifications = async () => {
     setToggleMenu(false);
@@ -75,7 +82,7 @@ const Menu = ({ toggleMenu,uploadState, setToggleMenu }) => {
     try {
       await AsyncStorage.removeItem("token");
       await AsyncStorage.removeItem("userData");
-      const result = dispatch(Logout())
+      const result = dispatch(Logout());
       // console.log(result)
       setToggleMenu(false);
       navigation.navigate("Auth", { screen: "Login" });
@@ -83,47 +90,47 @@ const Menu = ({ toggleMenu,uploadState, setToggleMenu }) => {
       console.error("Error during logout:", error);
     }
   };
-//Upload A Song
-const handleUploadState = async () => {
-  const token = await AsyncStorage.getItem("token");
-  if (!token) {
-    navigation.navigate("Auth", {
-      screen: "Login"
-    });
-    return;
-  }
-  
-  uploadState(true);
-  setToggleMenu(false);
-};
+  //Upload A Song
+  const handleUploadState = async () => {
+    const token = await AsyncStorage.getItem("token");
+    if (!token) {
+      navigation.navigate("Auth", {
+        screen: "Login"
+      });
+      return;
+    }
+
+    uploadState(true);
+    setToggleMenu(false);
+  };
   return (
-   
     <Modal
       animationType="slide"
       transparent
       visible={toggleMenu}
       onRequestClose={() => setToggleMenu(false)}
     >
-      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.6)"}}>
-        <TouchableWithoutFeedback onPress={() => {
-          setToggleMenu(false);
-          
-          }}  accessible={false}>
+      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.6)" }}>
+        <TouchableWithoutFeedback
+          onPress={() => {
+            setToggleMenu(false);
+          }}
+          accessible={false}
+        >
           <View style={{ flex: 1 }}>
-            <TouchableWithoutFeedback >
+            <TouchableWithoutFeedback>
               <View
                 style={{
                   marginTop: inset.top,
                   padding: 20,
                   backgroundColor: "white",
-                  width: dimensions.width*0.75,
+                  width: dimensions.width * 0.75,
                   height: dimensions.height * 0.93,
                   borderTopRightRadius: 20,
                   borderBottomRightRadius: 20,
-                  display:"flex",
-                  flexDirection:"column",
-                  justifyContent:'space-between'
-                  
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between"
                 }}
               >
                 <View className="flex flex-col">
@@ -157,20 +164,25 @@ const handleUploadState = async () => {
                       {User?.user?.username || "Guest"}
                     </Text>
                   </View>
-                  <TouchableOpacity className="flex flex-row items-center px-2 justify-between bg-gray-600 rounded-full my-2 py-1" onPress={() => {
-                   
-                    handleUploadState();}}>
+                  <TouchableOpacity
+                    className="flex flex-row items-center px-2 justify-between bg-gray-600 rounded-full my-2 py-1"
+                    onPress={() => {
+                      handleUploadState();
+                    }}
+                  >
                     <View className="flex flex-row items-center gap-x-2">
-                    <MaterialIcons
-                      name="playlist-add-circle"
-                      size={dimensions.big_icon}
-                      color={COLORS.white}
-                    />
-                    <Text className="text-white font-bold">Upload a Song</Text>
+                      <MaterialIcons
+                        name="playlist-add-circle"
+                        size={dimensions.big_icon}
+                        color={COLORS.white}
+                      />
+                      <Text className="text-white font-bold">
+                        {t("upload")}
+                      </Text>
                     </View>
-                     <Entypo name="chevron-right" size={24} color="white" />
+                    <Entypo name="chevron-right" size={24} color="white" />
                   </TouchableOpacity>
-                  
+
                   <TouchableOpacity
                     className="flex flex-row items-center px-2 justify-between bg-gray-600 rounded-full my-2 py-1"
                     onPress={() => FetchNotifications()}
@@ -182,7 +194,7 @@ const handleUploadState = async () => {
                         color={COLORS.white}
                       />
                       <Text className="text-white font-bold">
-                        Notifications
+                        {t("notification")}
                       </Text>
                     </View>
                     <Entypo name="chevron-right" size={24} color="white" />
@@ -200,31 +212,65 @@ const handleUploadState = async () => {
                         color={COLORS.white}
                       />
                       <Text className="text-white font-bold">
-                        Change Language
+                        {t("language")}
                       </Text>
                     </View>
                     <Entypo name="chevron-right" size={24} color="white" />
                   </TouchableOpacity>
                 </View>
+                <View className="flex-1 flex-col flex justify-center gap-y-2">
+                  <TouchableOpacity onPress={()=>setContact_visible(!contact_visible)} className="flex flex-row items-center gap-x-2 p-1 rounded-full border">
+                    <View
+                      className="rounded-full bg-blue-700 flex flex-col items-center justify-center"
+                      style={{
+                        width: dimensions.width * 0.11,
+                        height: dimensions.width * 0.11
+                      }}
+                    >
+                      <MaterialIcons
+                        name="support-agent"
+                        size={dimensions.width * 0.09}
+                        color="white"
+                      />
+                    </View>
+                    <Text className="font-bold ">{t("contact_us")}</Text>
+                  </TouchableOpacity>
 
-                <TouchableOpacity
-                  className="rounded-full flex flex-row items-center gap-x-2"
-                  style={{
-                    marginTop: 20,
-                    padding: 10,
-                    backgroundColor: "orange",
-                    borderRadius: 5
-                  }}
-                  onPress={handleLogout}
-                >
-                  <AntDesign name="logout" size={24} color={COLORS.white} />
-                  <Text
-                    className="font-bold"
-                    style={{ color: "white", textAlign: "center" }}
+                  <TouchableOpacity onPress={()=>setSupportVisible(true)} className="flex flex-row items-center gap-x-2 border p-1 rounded-full">
+                    <View className="rounded-full bg-orange-700 flex flex-col items-center justify-center"
+                      style={{
+                        width: dimensions.width * 0.11,
+                        height: dimensions.width * 0.11
+                      }}>
+                    <FontAwesome5
+                      name="hand-holding-heart"
+                      size={dimensions.width * 0.06}
+                      color="white"
+                    />
+                    </View>
+                    <Text className="font-bold ">{t("support_app")}</Text>
+                  </TouchableOpacity>
+                </View>
+                <View className="flex flex-col gap-y-2">
+                  <TouchableOpacity
+                    className="rounded-full flex flex-row items-center gap-x-2"
+                    style={{
+                      marginTop: 20,
+                      padding: 10,
+                      backgroundColor: "orange",
+                      borderRadius: 5
+                    }}
+                    onPress={handleLogout}
                   >
-                   {User?.user?.username?'Logout':'Login'}
-                  </Text>
-                </TouchableOpacity>
+                    <AntDesign name="logout" size={24} color={COLORS.white} />
+                    <Text
+                      className="font-bold"
+                      style={{ color: "white", textAlign: "center" }}
+                    >
+                      {User?.user?.username ? t("logout") : t("login")}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </TouchableWithoutFeedback>
           </View>
@@ -265,9 +311,10 @@ const handleUploadState = async () => {
           </View>
         </View>
       </Modal>
+      <ContactUsModal visible={contact_visible} setVisible={(visible)=>setContact_visible(visible)} />
+        <SupportModal visible={support_visible} setSupportVisible={(support_visible)=>setSupportVisible(support_visible)}/>
     </Modal>
 
-   
     //Change Language Modal
   );
 };

@@ -7,7 +7,8 @@ import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { COLORS } from "../../Components/Global";
 import { viewPdf, downloadPdf, downloadAndSavePdf }from "../../Components/SongDownload/DownloadUtils";
 import CustomModal from "../../Components/SongDownload/CustomModal";
-
+import { t } from "i18next";
+import Sskeleton from "../../Components/Sskeleton";
 const SongCategories = ({ route }) => {
   const dispatch = useDispatch();
 
@@ -98,11 +99,16 @@ const SongCategories = ({ route }) => {
           if (isCloseToBottom) loadMoreSongs();
         }}
       >
-        {songs?.map((item, index) => (
+         {copyLoading && <View>
+          {[...Array(20)].map((_,index)=>{
+            return <Sskeleton key={index} className="my-1" />
+          })}
+         </View>}
+        {songs?.length>0?songs?.map((item, index) => (
           <TouchableOpacity
             key={index}
             onPress={() => handleSongPress(item)}
-            className="flex flex-row items-center py-2 px-3 border-b border-gray-300"
+            className="flex flex-row items-center py-2 px-3 border-b border-gray-800"
           >
             <FontAwesome6 name="file-pdf" size={27} color="#F40F02" />
             <View className="flex-1 ml-3">
@@ -113,7 +119,7 @@ const SongCategories = ({ route }) => {
               <Text>{downloadProgress}</Text>
             </View>}
           </TouchableOpacity>
-        ))}
+        )):<Text className="text-gray-300 font-bold">{t("empty_list")}</Text>}
       </ScrollView>
 
       <CustomModal

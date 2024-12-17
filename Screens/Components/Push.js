@@ -1,19 +1,22 @@
 import { useState, useEffect, useRef } from "react";
-import { Text, View, Button, Platform } from "react-native";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
-import { Url } from "../../Url";
+import AsyncStorage from '@react-native-async-storage/async-storage'; // For storing token
+import { Url } from "../../Url"; // Adjust the URL based on your backend
+import { Platform } from "react-native";
+
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+    
   })
 });
 
 function handleRegistrationError(errorMessage) {
-  alert(errorMessage);
+  console.error(errorMessage);
   throw new Error(errorMessage);
 }
 
@@ -23,52 +26,55 @@ export async function registerForPushNotificationsAsync() {
       name: "default",
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
-      lightColor: "#FF231F7C"
+      lightColor: "#FF231F7C",
+      icon:"./../../assets/notification_icon.png"
     });
   }
 
   if (Device.isDevice) {
-    const { status: existingStatus } =
-      await Notifications.getPermissionsAsync();
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
+
     if (existingStatus !== "granted") {
       const { status } = await Notifications.requestPermissionsAsync();
       finalStatus = status;
     }
+
     if (finalStatus !== "granted") {
       handleRegistrationError(
         "Permission not granted to get push token for push notification!"
       );
       return;
     }
+
     const projectId =
       Constants?.expoConfig?.extra?.eas?.projectId ??
       Constants?.easConfig?.projectId;
+
     if (!projectId) {
       handleRegistrationError("Project ID not found");
+      return;
     }
+
     try {
       const pushTokenString = (
         await Notifications.getExpoPushTokenAsync({
           projectId
         })
       ).data;
-      console.log(pushTokenString);
-      // Send the push token to your backend server for further processing
-      const response = await fetch(`${Url}/notification/register_device`, {
+
+      // Store the token in AsyncStorage for later use
+      await AsyncStorage.setItem("expoPushToken", pushTokenString);
+
+      // Optionally, send the push token to your backend
+      await fetch(`${Url}/notification/register_device`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         redirect: "follow",
         body: JSON.stringify({
           token: pushTokenString
         })
-      }).then((response) =>
-        response
-          .json()
-          .then((result) => console.log(result))
-          .catch((e) => console.log(e))
-      );
-      return pushTokenString;
+      });
     } catch (e) {
       handleRegistrationError(`${e}`);
     }
@@ -77,25 +83,28 @@ export async function registerForPushNotificationsAsync() {
   }
 }
 
-export default function Push() {
-  const [expoPushToken, setExpoPushToken] = useState("");
-  const [notification, setNotification] = useState(undefined);
+export function usePushNotifications() {
+  const [notification, setNotification] = useState(null);
   const notificationListener = useRef();
   const responseListener = useRef();
 
   useEffect(() => {
-    registerForPushNotificationsAsync()
-      .then((token) => setExpoPushToken(token ?? ""))
-      .catch((error) => setExpoPushToken(`${error}`));
+    // Register for push notifications and save the token
+    registerForPushNotificationsAsync().catch((error) =>
+      console.error("Failed to register for push notifications:", error)
+    );
 
+    // Listen for incoming notifications
     notificationListener.current =
       Notifications.addNotificationReceivedListener((notification) => {
         setNotification(notification);
       });
 
+    // Handle notification interaction
     responseListener.current =
       Notifications.addNotificationResponseReceivedListener((response) => {
-        console.log(response);
+        console.log("Notification response received:", response);
+        // Handle response (e.g., navigate, show content based on the response)
       });
 
     return () => {
@@ -106,23 +115,7 @@ export default function Push() {
       responseListener.current &&
         Notifications.removeNotificationSubscription(responseListener.current);
     };
-  }, []);
+  }, []); // Empty dependency array means this will run only once when the component mounts
 
-  return (
-    <View
-      style={{ flex: 1, alignItems: "center", justifyContent: "space-around" }}
-    >
-      <Text>Your Expo push token: {expoPushToken}</Text>
-      <View style={{ alignItems: "center", justifyContent: "center" }}>
-        <Text>
-          Title: {notification && notification.request.content.title}{" "}
-        </Text>
-        <Text>Body: {notification && notification.request.content.body}</Text>
-        <Text>
-          Data:{" "}
-          {notification && JSON.stringify(notification.request.content.data)}
-        </Text>
-      </View>
-    </View>
-  );
+  // No need to return anything; side effects are handled inside the useEffect
 }

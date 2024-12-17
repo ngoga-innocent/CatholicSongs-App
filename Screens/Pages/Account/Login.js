@@ -21,12 +21,16 @@ import { Avatar } from "react-native-elements";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import Entypo from "@expo/vector-icons/Entypo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useTranslation } from "react-i18next";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 const Login = () => {
+  const inset=useSafeAreaInsets();
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const { isLoading, isError, RegisterStatus, message, isLogged } = useSelector(
     (state) => state.Account
   );
+  const {t}=useTranslation();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -135,18 +139,25 @@ if(Register.fulfilled.match(result)){
     }
   }, [navigation, isLogged]);
   return (
-    <SafeAreaView className={`flex-1 w-full  bg-[${COLORS.Primary}] pt-20`}>
+    <SafeAreaView className={`flex-1 w-full  bg-[${COLORS.Primary}]`} style={{
+      paddingTop: inset.top,
+      paddingBottom: inset.bottom,
+      
+    }}>
       <Spinner visible={isLoading} color={COLORS.green} size={20} />
       <Toast />
+      <View className="py-6">
       <Text className="text-mygreen font-bold text-2xl text-center">
         {title}
       </Text>
+      </View>
       <ScrollView
-        className={`flex-1 flex-grow `}
+        className={`flex-1 `}
         contentContainerStyle={{
           flexGrow: 1
         }}
       >
+        <View className="flex-1">
         <View className="items-center justify-center">
           <Image
             source={require("../../../assets/icon.png")}
@@ -166,7 +177,7 @@ if(Register.fulfilled.match(result)){
                   title == "Login" ? "bg-mygreen z-10 " : "bg-bg"
                 }`}
               >
-                <Text className="font-bold">Login</Text>
+                <Text className="font-bold">{t("login")}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => {
@@ -176,7 +187,7 @@ if(Register.fulfilled.match(result)){
                   title == "Register" ? "bg-mygreen z-10" : "bg-bg"
                 }`}
               >
-                <Text className="font-bold">Register</Text>
+                <Text className="font-bold">{t("register")}</Text>
               </TouchableOpacity>
             </View>
             <Text className="text-orange-600 font-bold">{message}</Text>
@@ -295,13 +306,15 @@ if(Register.fulfilled.match(result)){
               </>
             )}
           </View>
-        </View>
-        <TouchableOpacity
+          <TouchableOpacity
           onPress={() => navigation.navigate("Tab")}
-          className="absolute bottom-4 items-center self-center"
+          className=" items-center self-center"
         >
           <Text className="font-bold">Skip for Later</Text>
         </TouchableOpacity>
+        </View>
+        </View>
+       
       </ScrollView>
     </SafeAreaView>
   );

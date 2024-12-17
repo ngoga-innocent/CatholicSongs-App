@@ -51,14 +51,16 @@ const Notification = () => {
         {notifications.map((item, index) => (
           <View
             key={index}
-            className="py-4 flex flex-row gap-x-2 items-center  self-center bg-slate-900 my-1 rounded-lg px-2  flex-1 w-[100%]"
+            className="py-2 flex flex-row gap-x-2 items-center  self-center  my-1 rounded-lg   flex-1 w-[90%]"
           >
+            <View className="ring-white ring-1 border-gray-500 border rounded-full p-2">
             <MaterialIcons name="notifications-active" size={24} color="gray" />
-            <Text className="text-gray-500 font-bold">{item.notification}</Text>
+            </View>
+            <Text className="text-gray-300 font-bold text-wrap">{item.notification}</Text>
           </View>
         ))}
       </ScrollView>
-      <Push />
+      
     </View>
   );
 };

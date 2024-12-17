@@ -32,23 +32,22 @@ export const UploadSong = createAsyncThunk(
     formData.append("category", kwargs?.chooseCategory?.id);
 
     // Append the PDF document
-    formData.append("document", kwargs?.document)
-    
+    formData.append("document", kwargs?.document);
 
     const myHeaders = new Headers();
-    myHeaders.append("Authorization", `Token ${token}`);  // Only append Authorization header
-    console.log(myHeaders)
+    myHeaders.append("Authorization", `Token ${token}`); // Only append Authorization header
+    console.log(myHeaders);
     const requestOptions = {
       method: "POST",
       body: formData,
-      headers: myHeaders,  // No need to set Content-Type
+      headers: myHeaders, // No need to set Content-Type
       redirect: "follow"
     };
-    
+
     try {
       const res = await fetch(`${Url}/documents/`, requestOptions);
       const data = await res.json();
-      
+
       if (!res.ok) {
         return rejectWithValue(data);
       }
@@ -61,7 +60,6 @@ export const UploadSong = createAsyncThunk(
     }
   }
 );
-
 
 export const FetchCopiesType = createAsyncThunk(
   "fetch/Type",
@@ -198,6 +196,36 @@ export const SearchSong = createAsyncThunk(
     }
   }
 );
+//Request A song
+export const RequestSong = createAsyncThunk(
+  "requestSong", 
+  async (payload, { rejectWithValue }) => {
+    const headers = {
+      "Content-Type": "application/json"
+    };
+
+    const requestOptions = {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify({ name: payload.name }), // Ensure the body is a JSON string
+      redirect: "follow"
+    };
+
+    try {
+      const res = await fetch(`${Url}/documents/request`, requestOptions);
+      const data = await res.json();
+
+      if (!res.ok) {
+        return rejectWithValue(data); // Handle errors from the server
+      }
+
+      return data; // Return the successful response
+    } catch (error) {
+      console.error("Error during RequestSong:", error);
+      return rejectWithValue({ error: error.message }); // Return a structured error
+    }
+  }
+);
 const CopiesSlice = createSlice({
   name: "CopiesSlice",
   initialState,
@@ -218,7 +246,7 @@ const CopiesSlice = createSlice({
     builder.addCase(FetchCopiesType.rejected, (state, action) => {
       state.isError = true;
       state.message = action.payload.message;
-      state.copyLoading=false
+      state.copyLoading = false;
     });
 
     //Getting Copiesss
@@ -252,8 +280,20 @@ const CopiesSlice = createSlice({
       state.copyLoading = true;
     });
     builder.addCase(GetSong.fulfilled, (state, action) => {
-      state.copies = action.payload;
+      console.log("page song",action.payload);
       state.copyLoading = false;
+      
+
+      if (action.payload && action.payload.current_page !== 1) {
+        const existingSongs = state.copies?.songs || [];
+        state.copies.songs = [...existingSongs, ...(action.payload.songs || [])];
+      } else{
+        state.copies=action.payload;
+      }
+      
+      
+      
+      
     });
     builder.addCase(GetSong.rejected, (state, action) => {
       state.isError = action.payload.message;
@@ -280,6 +320,18 @@ const CopiesSlice = createSlice({
       state.copyLoading = false;
     });
     builder.addCase(UploadSong.rejected, (state, action) => {
+      state.isError = true;
+      state.copyLoading = false;
+      console.log(action.payload);
+    });
+    //Request Song
+    builder.addCase(RequestSong.pending, (state) => {
+      state.copyLoading = true;
+    });
+    builder.addCase(RequestSong.fulfilled, (state) => {
+      state.copyLoading = false;
+    });
+    builder.addCase(RequestSong.rejected, (state, action) => {
       state.isError = true;
       state.copyLoading = false;
       console.log(action.payload);

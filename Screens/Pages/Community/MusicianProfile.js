@@ -133,7 +133,7 @@ const MusicianProfile = ({ route }) => {
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() =>
-              `Linking.openURL(sms:${selectedMusician?.phone_number})`
+              Linking.openURL(`sms:${selectedMusician?.phone_number}`)
             }
             className="px-3 py-1 rounded-full bg-blue-600 py-3 w-[30%] flex flex-col items-center justify-center"
           >

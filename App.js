@@ -9,8 +9,9 @@ import React,{useEffect} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { COLORS } from './Screens/Components/Global';
+import { usePushNotifications } from './Screens/Components/Push';
 export default function App() {
-  
+  usePushNotifications()
   // const Account=useSelector((state)=>state.Account)
   return (
     <Provider store={store}> 

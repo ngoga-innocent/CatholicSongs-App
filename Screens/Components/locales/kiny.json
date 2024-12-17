@@ -9,6 +9,16 @@
     "location":"twagushakira hehe?",
     "description":"Uri muntu ki?",
     "contact":"Twavugana nawe gute?",
-    "event":"Ibigezeho muri Kiliziya",
-    "Miss":"Ntucikwe n'ibi"
+    "event":"Ibigezweho muri Kiliziya",
+    "Miss":"Ntucikwe n'ibi",
+    "request":"Saba Indirimbo",
+    "notification":"Amamenyesha",
+    "language":"Hindura ururimi",
+    "upload":"Shyiraho indirimbo",
+    "login":"Injira",
+    "register":"Iyandikishe",
+    "logout":"Sohoka",
+    "empty_list":"Nta ndirimbo tubonye muri iki gice",
+    "contact_us":"Vugana natwe",
+    "support_app":"Tera inkunga Application"
 }

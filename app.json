@@ -3,6 +3,8 @@
     "name": "Umuziki Gatorika",
     "slug": "CatholicSongs",
     "version": "1.0.0",
+    "scheme": "umuzikigatorika",
+    "platforms": ["ios", "android", "web"],
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -17,6 +19,7 @@
       "MEDIA_LIBRARY"
     ],
     "plugins": [
+      
       [
         "expo-media-library",
         {
@@ -25,14 +28,24 @@
           "isAccessMediaLocationEnabled": true
         }
       ],
+      
       [
         "expo-image-picker",
         {
           "photosPermission": "The app accesses your photos to let you share them with your friends."
         }
       ],
-      "expo-localization"
-      
+      "expo-localization",
+      [
+      "expo-notifications",
+        {
+          "icon": "./assets/notification_icon.png",
+          "color": "#ffffff",
+          "defaultChannel": "default",
+          
+          "enableBackgroundRemoteNotifications": false
+        }
+      ]
     ],
     "assetBundlePatterns": [
       "**/*"
@@ -42,20 +55,37 @@
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Allow CatholicSongs to access your photos.",
         "NSPhotoLibraryAddUsageDescription": "Allow CatholicSongs to save photos."
-      }
+      },
+      "bundleIdentifier": "com.SailorPin.MusicSheets"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"
       },
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "umuzikiGatorika"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ],
       "permissions": [
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.ACCESS_MEDIA_LOCATION",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE",
-        "MANAGE_EXTERNAL_STORAGE"
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_MEDIA_LOCATION",
+        "android.permission.RECORD_AUDIO"
       ],
       "package": "com.SailorPin.MusicSheets",
       "googleServicesFile": "./google-services.json"
@@ -67,6 +97,12 @@
       "eas": {
         "projectId": "5db0ed18-74dc-46ae-b6d5-606efaee0de3"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/5db0ed18-74dc-46ae-b6d5-606efaee0de3"
     }
   }
 }

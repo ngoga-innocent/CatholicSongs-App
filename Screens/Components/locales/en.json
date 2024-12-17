@@ -10,5 +10,15 @@
     "description":"Describe yourself ",
     "contact":"How can we contact you?",
     "event":"Featured Events",
-    "Miss":"Don't Miss"
+    "Miss":"Don't Miss",
+    "request":"Request a song",
+    "notification":"Notification",
+    "language":"Change Language",
+    "upload":"Upload a Song",
+    "login":"Login",
+    "register":"Register",
+    "logout":"Logout",
+    "empty_list":"No Songs Found of this Category",
+    "contact_us":"Contact Us",
+    "support_app":"Support The App"
 }

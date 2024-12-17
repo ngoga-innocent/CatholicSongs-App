@@ -226,7 +226,7 @@ const Musicians = () => {
         />
       )}
       <View className="w-full flex flex-row flex-wrap  gap-2 my-2 mt-3">
-        {filteredMusicians.length > 0 &&
+        {filteredMusicians.length > 0 ?
           filteredMusicians.map((item, index) => {
             return (
               <TouchableOpacity
@@ -236,7 +236,7 @@ const Musicians = () => {
                   })
                 }
                 key={index}
-                className="flex flex-row w-full border border-slate-800 rounded-3xl px-2 py-1 items-center rounded-md items-center"
+                className="flex flex-row w-full  rounded-3xl px-2 py-1 items-center rounded-md items-center"
               >
                 <Avatar
                   source={
@@ -296,7 +296,7 @@ const Musicians = () => {
                 </View>
               </TouchableOpacity>
             );
-          })}
+          }):<Text className="text-gray-300">No Musician available for noww</Text>}
       </View>
       <Modal
         animationType="slide"

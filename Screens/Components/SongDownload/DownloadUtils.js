@@ -72,8 +72,79 @@ export const downloadPdf = async (pdfUrl, name, composer, setDownloadProgress, s
 };
 
 // Function to download and save PDF to media library
-export const downloadAndSavePdf = async (pdfUrl, name, composer, setDownloadProgress, setIsDownloading) => {
-  console.log("download",pdfUrl)
+// export const downloadAndSavePdf = async (pdfUrl, name, composer, setDownloadProgress, setIsDownloading) => {
+//   console.log("download",pdfUrl)
+//   if (!pdfUrl || typeof pdfUrl !== "string") {
+//     Alert.alert("Invalid URL", "The provided URL is not a valid PDF.");
+//     return;
+//   }
+
+//   const { status } = await MediaLibrary.requestPermissionsAsync();
+//   if (status !== "granted") {
+//     Alert.alert(
+//       "Permission Required",
+//       "Storage permission is needed to save files. Please enable it in your app settings.",
+//       [
+//         { text: "Cancel", style: "cancel" },
+//         { text: "Open Settings", onPress: () => Linking.openSettings() },
+//       ]
+//     );
+//     return;
+//   }
+
+//   const fileName = `${name}_${composer}.pdf`;
+//   const cacheUri = FileSystem.cacheDirectory + fileName;
+
+//   try {
+//     setIsDownloading(true);
+
+//     // Download file
+//     const downloadResumable = FileSystem.createDownloadResumable(
+//       pdfUrl,
+//       cacheUri,
+//       {},
+//       (downloadProgress) => {
+//         const progress = downloadProgress.totalBytesWritten / downloadProgress.totalBytesExpectedToWrite;
+//         setDownloadProgress(Math.floor(progress * 100));
+//       }
+//     );
+//     const { uri: cachedUri } = await downloadResumable.downloadAsync();
+
+//     console.log("File downloaded to cache:", cachedUri);
+//     setIsDownloading(false);
+
+//     if (Platform.OS === "android") {
+//       const permission = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+//       if (permission.status !== "granted") {
+//         Alert.alert("Permission Denied", "File saved to app storage.");
+//         return;
+//       }
+
+//       const directoryUri = permission.directoryUri;
+//       const targetUri = await FileSystem.StorageAccessFramework.createFileAsync(directoryUri, fileName, "application/pdf");
+//       const fileContent = await FileSystem.readAsStringAsync(cachedUri, { encoding: FileSystem.EncodingType.Base64 });
+//       await FileSystem.writeAsStringAsync(targetUri, fileContent, { encoding: FileSystem.EncodingType.Base64 });
+
+//       Alert.alert("Success", "The file has been saved.");
+//     } else {
+//       await Sharing.shareAsync(cachedUri);
+//       await FileSystem.deleteAsync(cachedUri, { idempotent: true });
+//     }
+//   } catch (error) {
+//     console.error("Error:", error);
+//     Alert.alert("Error", "Failed to save the file.");
+//     setIsDownloading(false);
+//   }
+// };
+export const downloadAndSavePdf = async (
+  pdfUrl,
+  name,
+  composer,
+  setDownloadProgress,
+  setIsDownloading
+) => {
+  console.log("Downloading:", pdfUrl);
+
   if (!pdfUrl || typeof pdfUrl !== "string") {
     Alert.alert("Invalid URL", "The provided URL is not a valid PDF.");
     return;
@@ -98,38 +169,52 @@ export const downloadAndSavePdf = async (pdfUrl, name, composer, setDownloadProg
   try {
     setIsDownloading(true);
 
-    // Download file
+    // Download the file
     const downloadResumable = FileSystem.createDownloadResumable(
       pdfUrl,
       cacheUri,
       {},
       (downloadProgress) => {
-        const progress = downloadProgress.totalBytesWritten / downloadProgress.totalBytesExpectedToWrite;
+        const progress =
+          downloadProgress.totalBytesWritten / downloadProgress.totalBytesExpectedToWrite;
         setDownloadProgress(Math.floor(progress * 100));
       }
     );
     const { uri: cachedUri } = await downloadResumable.downloadAsync();
 
     console.log("File downloaded to cache:", cachedUri);
-    setIsDownloading(false);
 
     if (Platform.OS === "android") {
+      // Request directory access via StorageAccessFramework
       const permission = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
-      if (permission.status !== "granted") {
-        Alert.alert("Permission Denied", "File saved to app storage.");
-        return;
+      if (permission.granted) {
+        const directoryUri = permission.directoryUri;
+
+        // Save the file to the selected directory
+        const targetUri = await FileSystem.StorageAccessFramework.createFileAsync(
+          directoryUri,
+          fileName,
+          "application/pdf"
+        );
+        const fileContent = await FileSystem.readAsStringAsync(cachedUri, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        await FileSystem.writeAsStringAsync(targetUri, fileContent, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+
+        Alert.alert("Success", "The file has been saved to your selected folder.");
+      } else {
+        Alert.alert("Permission Denied", "Unable to save the file without directory access.");
       }
-
-      const directoryUri = permission.directoryUri;
-      const targetUri = await FileSystem.StorageAccessFramework.createFileAsync(directoryUri, fileName, "application/pdf");
-      const fileContent = await FileSystem.readAsStringAsync(cachedUri, { encoding: FileSystem.EncodingType.Base64 });
-      await FileSystem.writeAsStringAsync(targetUri, fileContent, { encoding: FileSystem.EncodingType.Base64 });
-
-      Alert.alert("Success", "The file has been saved.");
-    } else {
-      await Sharing.shareAsync(cachedUri);
-      await FileSystem.deleteAsync(cachedUri, { idempotent: true });
+    } else if (Platform.OS === "ios") {
+      // On iOS, save to the media library
+      const asset = await MediaLibrary.createAssetAsync(cachedUri);
+      await MediaLibrary.createAlbumAsync("Downloads", asset, false);
+      Alert.alert("Success", "The file has been saved to your Downloads folder.");
     }
+
+    setIsDownloading(false);
   } catch (error) {
     console.error("Error:", error);
     Alert.alert("Error", "Failed to save the file.");

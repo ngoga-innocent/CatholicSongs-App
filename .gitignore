@@ -35,3 +35,6 @@ yarn-error.*
 *.tsbuildinfo
 #Firebase
 firebase-adminsdk.json
+credentials.json
+credentials/
+umuzikigatorika.json

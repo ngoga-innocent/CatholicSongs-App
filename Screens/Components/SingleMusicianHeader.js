@@ -21,7 +21,9 @@ export default SingleMusicianHeader = ({ title, uploadState }) => {
         className="flex flex-row items-center justify-between py-2 px-2 bg-black "
         style={{ paddingTop: inset.top }}
       >
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity onPress={() => navigation.navigate("home",{
+          screen:"homepage"
+        })}>
           <FontAwesome6
             name="circle-chevron-left"
             size={35}

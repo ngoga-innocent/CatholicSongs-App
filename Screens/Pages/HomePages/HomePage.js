@@ -8,7 +8,7 @@ import {
   TouchableWithoutFeedback,
   TextInput,
   ActivityIndicator,
-  RefreshControl,
+  RefreshControl
 } from "react-native";
 import Header from "../../Components/Header";
 import { useSelector, useDispatch } from "react-redux";
@@ -16,10 +16,11 @@ import * as Network from "expo-network";
 import Toast from "react-native-toast-message";
 import { useTranslation } from "react-i18next";
 import "../../Components/i18n";
+import Skeleton from "../../Components/Skeleton";
 import {
   SongCategory,
   FetchCopiesType,
-  UploadSong,
+  UploadSong
 } from "../../../redux/Features/CopuesSlice";
 import CircularProgress from "../../Components/CircleAnimation";
 import { useNavigation } from "@react-navigation/native";
@@ -36,7 +37,7 @@ const HomePage = () => {
   const { songCategories, copiesType, copyLoading } = useSelector(
     (state) => state.Copies
   );
-  const {User}=useSelector(state=>state.Account)
+  const { User } = useSelector((state) => state.Account);
   const [upload, setUpload] = useState(false);
   const [showpart, setShowPart] = useState(false);
   const [choosenPart, setChoosenPart] = useState("");
@@ -60,18 +61,15 @@ const HomePage = () => {
   }
   //Fetxhing song category
   async function FetchCategories() {
-    dispatch(verifyToken())
+    dispatch(verifyToken());
     if (!checkNetwork()) {
-      
-        
-      
       Toast.show({
         text1: "No Active internet Connection",
         text2: "Continueing in Offline mode",
         type: "info",
         position: "top",
 
-        autoHide: true,
+        autoHide: true
       });
       return;
     }
@@ -89,7 +87,7 @@ const HomePage = () => {
         type: "error",
         position: "top",
 
-        autoHide: true,
+        autoHide: true
       });
       return;
     }
@@ -113,7 +111,7 @@ const HomePage = () => {
         type: "info",
         position: "top",
 
-        autoHide: true,
+        autoHide: true
       });
       return;
     }
@@ -136,7 +134,7 @@ const HomePage = () => {
         type: "error",
         position: "top",
 
-        autoHide: true,
+        autoHide: true
       });
       return;
     }
@@ -146,7 +144,7 @@ const HomePage = () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
         type: "*/*",
-        copyToCacheDirectory: true,
+        copyToCacheDirectory: true
       });
       console.log(result);
       if (!result.canceled) {
@@ -168,7 +166,7 @@ const HomePage = () => {
         type: "error",
         position: "top",
 
-        autoHide: true,
+        autoHide: true
       });
       return;
     }
@@ -179,7 +177,7 @@ const HomePage = () => {
         type: "error",
         position: "top",
 
-        autoHide: true,
+        autoHide: true
       });
       return;
     }
@@ -190,7 +188,7 @@ const HomePage = () => {
         type: "error",
         position: "top",
 
-        autoHide: true,
+        autoHide: true
       });
       return;
     }
@@ -200,13 +198,13 @@ const HomePage = () => {
       document: {
         uri: selectedPdf?.uri,
         name: selectedPdf?.name || song_name,
-        type: selectedPdf?.mimeType,
+        type: selectedPdf?.mimeType
       },
       chooseCategory: choosenCategory,
-      choosenPart: choosenPart,
+      choosenPart: choosenPart
     };
     const result = await dispatch(UploadSong(body));
-    console.log(result)
+    console.log(result);
     if (UploadSong.fulfilled.match(result)) {
       Toast.show({
         text1: "Song Uploaded Successfully",
@@ -214,7 +212,7 @@ const HomePage = () => {
         type: "success",
         position: "top",
 
-        autoHide: true,
+        autoHide: true
       });
       setUpload(false);
       return;
@@ -226,7 +224,7 @@ const HomePage = () => {
         type: "error",
         position: "top",
 
-        autoHide: true,
+        autoHide: true
       });
       return;
     }
@@ -264,35 +262,46 @@ const HomePage = () => {
       >
         {/* Circular Progress */}
         {copyLoading && <ActivityIndicator color="white" />}
-        <CircularProgress
-          songs_number={
-            songCategories?.songs_number > 999
-              ? `999+`
-              : songCategories?.songs_number
-          }
-        />
 
-        {/* Category List */}
-        <View className="my-4 mt-8 flex-1">
-          {songCategories?.categories?.map((category) => (
-            <TouchableOpacity
-              onPress={() =>
-                navigation.navigate("song_category", {
-                  category: category,
-                })
+        {copyLoading ? (
+          <View className="flex flex-col">
+            {[...Array(15)].map((_, index) => {
+              return <Skeleton key={index} className="my-1" />;
+            })}
+          </View>
+        ) : (
+          <>
+            <CircularProgress
+              songs_number={
+                songCategories?.songs_number > 9999
+                  ? `9999+`
+                  : songCategories?.songs_number
               }
-              key={category.id}
-              className="py-2 px-4 bg-white rounded-lg shadow-md shadow-black flex flex-row items-center justify-between"
-            >
-              <Text className="font-bold text-lg">{category.name}</Text>
-              <View className="h-10 w-10 items-center justify-center rounded-full border-2 border-gray-300">
-                <Text>
-                  {category?.song_count < 99 ? category?.song_count : "99+"}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
+            />
+
+            {/* Category List */}
+            <View className="my-4 mt-8 flex-1">
+              {songCategories?.categories?.map((category) => (
+                <TouchableOpacity
+                  onPress={() =>
+                    navigation.navigate("song_category", {
+                      category: category
+                    })
+                  }
+                  key={category.id}
+                  className="py-2 px-4 bg-white rounded-lg shadow-md shadow-black flex flex-row items-center justify-between"
+                >
+                  <Text className="font-bold text-lg">{category.name}</Text>
+                  <View className="h-10 w-10 items-center justify-center rounded-full border-2 border-gray-300">
+                    <Text>
+                      {category?.song_count < 99 ? category?.song_count : "99+"}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </>
+        )}
       </ScrollView>
       <View>
         <Modal
@@ -316,7 +325,7 @@ const HomePage = () => {
                     style={{
                       backgroundColor: "white",
                       padding: 20,
-                      borderRadius: 10,
+                      borderRadius: 10
                     }}
                   >
                     <Text className="text-xl font-bold">Add New Song </Text>
@@ -369,7 +378,7 @@ const HomePage = () => {
                           className="flex-1 absolute w-full rounded-lg"
                           style={{
                             backgroundColor: "rgba(0,0,0,0.9)",
-                            zIndex: 70,
+                            zIndex: 70
                           }}
                         >
                           {songCategories?.categories?.map((item, index) => {
@@ -384,7 +393,7 @@ const HomePage = () => {
                                   padding: 10,
                                   borderBottomWidth: 1,
                                   borderColor: "gray",
-                                  backgroundColor: "white",
+                                  backgroundColor: "white"
                                 }}
                               >
                                 <Text>{item.name}</Text>
@@ -422,7 +431,7 @@ const HomePage = () => {
                                   padding: 10,
                                   borderBottomWidth: 1,
                                   borderColor: "gray",
-                                  backgroundColor: "white",
+                                  backgroundColor: "white"
                                 }}
                               >
                                 <Text>{item.name}</Text>

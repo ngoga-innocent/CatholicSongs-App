@@ -27,6 +27,7 @@ import * as ImagePicker from "expo-image-picker"
 import { useIsFocused } from "@react-navigation/native";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
+import ESkeleton from "../../Components/ESkeleton";
 const Archives = () => {
   const inset = useSafeAreaInsets();
   const dispatch = useDispatch();
@@ -177,7 +178,7 @@ const Archives = () => {
       }
   }
   return (
-    <ScrollView className="bg-black flex-1 relative" stickyHeaderIndices={[0]}>
+    <ScrollView className="bg-black flex-1 flex flex-col px-2" >
       <View
         className="bg-black z-50 flex flex-row justify-between bg-black z-50 items-center text-center  px-2"
         style={{ paddingTop: inset.top,zIndex:50 }}
@@ -223,8 +224,17 @@ const Archives = () => {
           </View>
         )}
       </View>
+      {eventLoading && <View className="flex flex-col gap-y-1">
+      {[...Array(4)].map((_,index)=>{
+        return(
+          <View key={index} className='my-1'>
+            <ESkeleton  />
+          </View>
+        )
+      })}
+      </View>}
       {eventLoading && <ActivityIndicator color='white' collapsable/>}
-      <View className="my-3">
+      {events.length >1 && <View className="my-3">
         <Text>Events</Text>
         {events?.length < 1 ? (
           <Text>No Events</Text>
@@ -296,11 +306,15 @@ const Archives = () => {
                   />
                   <View
                     style={{
-                      padding: 10,
+                      paddingVertical: 7,
+                      paddingHorizontal: 10,
+                      
                       position: "absolute",
                       bottom: 0,
+                      
+                      borderTopEndRadius:25,
                       flex: 1,
-                      backgroundColor: "rgba(0,0,0,0.2)"
+                      backgroundColor: "rgba(0,0,0,0.5)"
                     }}
                   >
                     <Text className="text-white text-sm font-semibold">
@@ -327,7 +341,7 @@ const Archives = () => {
             })}
           </Animated.ScrollView>
         )}
-      </View>
+      </View>}
       <View className="flex flex-row gap-x-1 self-end mx-2">
         {events?.map((item, index) => {
           return (
@@ -350,8 +364,9 @@ const Archives = () => {
           <Text>No Trending Songs</Text>
         ) : (
           <ScrollView
+
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 10 }}
+          contentContainerStyle={{ flex:1 }}
         >
           {trendings?.map((item, index) => {
             // Extract YouTube video ID and format the embed link
@@ -360,10 +375,10 @@ const Archives = () => {
         
             return (
               <TouchableOpacity
-              className="border border-slate-700 rounded-lg"
+              className="border border-gray-900 rounded-lg mx-auto"
                 key={index}
                 style={{
-                  width: dimensions.width * 0.9,
+                  width: dimensions.width * 0.90,
                   height: dimensions.height * 0.3,
                   marginVertical: 10,
                   borderRadius: 10,
@@ -371,9 +386,9 @@ const Archives = () => {
                 }}
               >
                 <WebView
-                  style={{ flex: 1 }}
+                  style={{ flex: 1,width:'100%',height:'100%' }}
                   javaScriptEnabled={true}
-                  source={{ uri: embedUrl }}
+                  source={{ uri: item?.link }}
                   allowsFullscreenVideo={true}
                   startInLoadingState={true}
                   mediaPlaybackRequiresUserAction={true} // Prevent autoplay
